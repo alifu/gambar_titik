@@ -4,6 +4,7 @@ import { AppLayout } from './components/AppLayout'
 import { EditorPage } from './features/editor/EditorPage'
 import { GalleryPage } from './features/gallery/GalleryPage'
 import { LoginPage } from './features/login/LoginPage'
+import { PrintPage } from './features/print/PrintPage'
 import { ProfilePage } from './features/profile/ProfilePage'
 import { RequireUser } from './user/RequireUser'
 
@@ -22,6 +23,7 @@ export function App() {
           <Route element={<RequireUser />}>
             <Route path="/galeri" element={<GalleryPage />} />
             <Route path="/warnai/:artId" element={<EditorPage />} />
+            <Route path="/cetak/:artId" element={<PrintPage />} />
             <Route path="/profil" element={<ProfileRoute />} />
           </Route>
         </Route>

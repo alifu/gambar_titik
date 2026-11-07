@@ -811,3 +811,178 @@ button:focus-visible {
 .profile-button {
   margin-top: var(--space-1);
 }
+
+/* Lembar cetak */
+.print-message {
+  padding: var(--space-2);
+}
+
+.print-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.print-key-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+}
+
+.print-sheet {
+  max-width: 48rem;
+  margin: 0 auto var(--space-3);
+  padding: var(--space-2);
+  background-color: #fff;
+  color: #000;
+  border: 1px solid var(--color-border);
+}
+
+.print-sheet-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.print-sheet-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 900;
+}
+
+.print-sheet-subtitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.print-grid {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.print-legend {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem 1rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.print-legend-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'swatch code' 'name name';
+  align-items: stretch;
+  font-size: 0.8rem;
+}
+
+.print-legend-swatch {
+  grid-area: swatch;
+  height: 1.1rem;
+  border: 1px solid #000;
+}
+
+.print-legend-code {
+  grid-area: code;
+  min-width: 1.6rem;
+  padding: 0 0.3rem;
+  border: 1px solid #000;
+  border-left: 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+.print-legend-name {
+  grid-area: name;
+}
+
+.print-sheet-brand {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.gallery-card-print {
+  display: block;
+  padding: 0.25rem var(--space-1) var(--space-1);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 40rem) {
+  .print-legend {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .app-header,
+  .skip-link,
+  .offline-banner,
+  .banner,
+  .update-prompt,
+  .print-hide {
+    display: none !important;
+  }
+
+  .app-layout,
+  .app-main {
+    display: block;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-sheet {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    break-inside: avoid;
+  }
+
+  .print-sheet--key {
+    break-before: page;
+  }
+
+  .print-sheet-title {
+    font-size: 22pt;
+  }
+
+  .print-legend {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.editor-actions a.editor-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius);
+  font-weight: 600;
+  text-decoration: none;
+}

@@ -64,7 +64,7 @@ test('offline: start_url, galeri dan editor tetap bisa dibuka dan mewarnai', asy
   await expect(page.getByText(/Kamu sedang offline/)).toBeVisible()
   await expect(galleryCards(page)).toHaveCount(GALLERY_SIZE)
 
-  await galleryCards(page).first().getByRole('link').click()
+  await galleryCards(page).first().getByRole('link').first().click()
   await paintSomeRegions(page)
 
   await context.setOffline(false)

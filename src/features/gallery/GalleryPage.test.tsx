@@ -59,6 +59,12 @@ describe('GalleryPage', () => {
     expect(link).toHaveAttribute('href', '/warnai/animal-2')
   })
 
+  it('links each card to its print sheet with an accessible label', async () => {
+    setup()
+    const link = await screen.findByRole('link', { name: ID.print.linkLabel('Kelinci') })
+    expect(link).toHaveAttribute('href', '/cetak/animal-2')
+  })
+
   it('shows an error with a retry button that reloads', async () => {
     load.mockRejectedValueOnce(new Error('Gagal memuat data gambar.'))
     const user = userEvent.setup()

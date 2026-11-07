@@ -1,4 +1,5 @@
 import { useState, type MouseEvent } from 'react'
+import { Link } from 'react-router-dom'
 import type { PixelColors } from '../../editor/tools'
 import { ID } from '../../i18n/id'
 import type { Artwork } from '../../types/artwork'
@@ -68,6 +69,13 @@ export function EditorActions(props: Props) {
       <button type="button" onClick={() => void handleDownload()}>
         {ID.editor.download}
       </button>
+      <Link
+        to={`/cetak/${artwork.id}`}
+        className="editor-button-secondary"
+        aria-label={ID.print.linkLabel(artwork.title)}
+      >
+        {ID.print.link}
+      </Link>
       {downloadError && (
         <p className="editor-error" role="alert">
           {downloadError}

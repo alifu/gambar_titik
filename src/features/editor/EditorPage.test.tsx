@@ -80,6 +80,12 @@ describe('EditorPage', () => {
     vi.restoreAllMocks()
   })
 
+  it('links to the print sheet', async () => {
+    await renderReady()
+    const link = screen.getByRole('link', { name: ID.print.linkLabel(art.title) })
+    expect(link).toHaveAttribute('href', `/cetak/${art.id}`)
+  })
+
   it('menampilkan status memuat lalu editor', async () => {
     renderEditor()
     expect(screen.getByRole('status')).toHaveTextContent(ID.editor.loading)

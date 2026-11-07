@@ -27,6 +27,13 @@ function ArtworkCardBase({ artwork, progress }: ArtworkCardProps) {
         <span className="gallery-card-title">{artwork.title}</span>
         {badge && <span className="gallery-badge">{badge}</span>}
       </Link>
+      <Link
+        to={`/cetak/${artwork.id}`}
+        className="gallery-card-print"
+        aria-label={ID.print.linkLabel(artwork.title)}
+      >
+        {ID.print.link}
+      </Link>
     </li>
   )
 }
