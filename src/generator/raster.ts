@@ -9,25 +9,50 @@ export type Point = readonly [number, number]
 export interface Layer {
   readonly shape: Shape
   readonly color: string
-  /** Pixel tinta selalu menjadi garis tepi (mis. mata, mulut, kumis). */
+  /** Tinta: detail kecil (mata, mulut) yang tidak boleh hilang saat diperkecil; tinta gelap jadi hitam. */
   readonly ink: boolean
+  /** Lapisan lembut (mis. pita langit): batas antar-lapisan lembut tidak diberi garis tepi. */
+  readonly soft?: boolean
+  /** Lapisan polos (mis. pipi merona): tidak pernah diberi garis tepi terhadap lapisan lain. */
+  readonly plain?: boolean
 }
 
 export interface Raster {
   readonly width: number
   readonly height: number
-  readonly colors: readonly string[]
-  /** Urutan lapisan yang terakhir menggambar pixel ini (0 = kanvas kosong). */
+  /** Warna per kotak, `null` = latar (tidak ada lapisan). */
+  readonly colors: readonly (string | null)[]
+  /** Lapisan (1-based) yang menggambar kotak ini (0 = latar). */
   readonly depth: readonly number[]
   readonly ink: readonly boolean[]
+  readonly soft: readonly boolean[]
+  readonly plain: readonly boolean[]
 }
 
-const BLANK_COLOR = '#ffffff'
 const CURVE_STEPS = 18
 
 export const fill = (color: string): Layer => ({ shape: () => true, color, ink: false })
 export const paint = (shape: Shape, color: string): Layer => ({ shape, color, ink: false })
 export const inkLayer = (shape: Shape, color: string): Layer => ({ shape, color, ink: true })
+export const softPaint = (shape: Shape, color: string): Layer => ({
+  shape,
+  color,
+  ink: false,
+  soft: true,
+})
+/** Garis detail berwarna (mis. helai mi): tetap terlihat walau tipis, tanpa garis tepi. */
+export const detailLine = (shape: Shape, color: string): Layer => ({
+  shape,
+  color,
+  ink: true,
+  plain: true,
+})
+export const plainPaint = (shape: Shape, color: string): Layer => ({
+  shape,
+  color,
+  ink: false,
+  plain: true,
+})
 
 export const circle =
   (cx: number, cy: number, r: number): Shape =>
@@ -147,23 +172,84 @@ export const translate =
   (x, y) =>
     shape(x - dx, y - dy)
 
-/** Gambar lapisan berurutan ke grid baru. Lapisan berikutnya menimpa yang sebelumnya. */
-export function render(width: number, height: number, layers: readonly Layer[]): Raster {
-  const size = width * height
-  const colors = new Array<string>(size).fill(BLANK_COLOR)
-  const depth = new Array<number>(size).fill(0)
-  const ink = new Array<boolean>(size).fill(false)
-  layers.forEach((layer, layerIndex) => {
-    for (let index = 0; index < size; index++) {
-      const px = index % width
-      const py = Math.floor(index / width)
-      if (!layer.shape(px + 0.5, py + 0.5)) continue
-      colors[index] = layer.color
-      depth[index] = layerIndex + 1
-      ink[index] = layer.ink
+/**
+ * Pemetaan kotak grid → koordinat desain: titik (cx, cy) di grid (kontinu) berada di
+ * (x0 + cx * scaleX, y0 + cy * scaleY) pada koordinat desain.
+ */
+export interface View {
+  readonly x0: number
+  readonly y0: number
+  readonly scaleX: number
+  readonly scaleY: number
+}
+
+export const IDENTITY_VIEW: View = { x0: 0, y0: 0, scaleX: 1, scaleY: 1 }
+/** Pixel tinta menang bila menutupi minimal seperempat kotak, agar garis tipis tidak hilang. */
+const INK_COVERAGE = 0.25
+
+/** Indeks lapisan paling depan (1-based) di titik (x, y), 0 = tidak ada lapisan. */
+export function topLayer(layers: readonly Layer[], x: number, y: number): number {
+  for (let index = layers.length - 1; index >= 0; index--) {
+    if (layers[index].shape(x, y)) return index + 1
+  }
+  return 0
+}
+
+/** Pilih lapisan untuk satu kotak dari hitungan sampel: tinta yang cukup luas, lalu yang terluas. */
+function chooseLayer(counts: readonly number[], layers: readonly Layer[], total: number): number {
+  let best = 0
+  let bestInk = 0
+  for (let depth = 1; depth < counts.length; depth++) {
+    if (counts[depth] >= counts[best]) best = depth
+    const isInk = layers[depth - 1].ink && counts[depth] >= total * INK_COVERAGE
+    if (isInk && (bestInk === 0 || counts[depth] >= counts[bestInk])) bestInk = depth
+  }
+  return bestInk !== 0 ? bestInk : best
+}
+
+function sampleCell(
+  layers: readonly Layer[],
+  px: number,
+  py: number,
+  view: View,
+  samples: number,
+): number {
+  const counts = new Array<number>(layers.length + 1).fill(0)
+  for (let sy = 0; sy < samples; sy++) {
+    for (let sx = 0; sx < samples; sx++) {
+      const x = view.x0 + (px + (sx + 0.5) / samples) * view.scaleX
+      const y = view.y0 + (py + (sy + 0.5) / samples) * view.scaleY
+      counts[topLayer(layers, x, y)]++
     }
-  })
-  return { width, height, colors, depth, ink }
+  }
+  return chooseLayer(counts, layers, samples * samples)
+}
+
+/**
+ * Gambar lapisan ke grid. Tiap kotak diambil `samples`×`samples` sampel di koordinat desain
+ * (lewat `view`), lalu diberi warna lapisan yang paling luas menutupinya (tinta diutamakan).
+ * Kotak tanpa lapisan menjadi latar (`null`).
+ */
+export function render(
+  width: number,
+  height: number,
+  layers: readonly Layer[],
+  view: View = IDENTITY_VIEW,
+  samples = 1,
+): Raster {
+  const size = width * height
+  const depth = Array.from({ length: size }, (_, index) =>
+    sampleCell(layers, index % width, Math.floor(index / width), view, samples),
+  )
+  return {
+    width,
+    height,
+    colors: depth.map((d) => (d === 0 ? null : layers[d - 1].color)),
+    depth,
+    ink: depth.map((d) => d !== 0 && layers[d - 1].ink),
+    soft: depth.map((d) => d !== 0 && layers[d - 1].soft === true),
+    plain: depth.map((d) => d !== 0 && layers[d - 1].plain === true),
+  }
 }
 
 /** Juring lingkaran dari sudut start ke end (radian, searah jarum jam pada layar). */

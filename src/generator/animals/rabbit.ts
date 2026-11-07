@@ -1,7 +1,6 @@
-import { flower, meadow, snowField } from '../backdrops.ts'
 import { lighten } from '../color.ts'
 import { type Design, type Subject, variantOf } from '../design.ts'
-import { int, type Rng } from '../random.ts'
+import { type Rng } from '../random.ts'
 import { ellipse, inkLayer, paint, polygon, symmetric, type Layer } from '../raster.ts'
 import { AXIS, blush, eyes, smallMouth } from './parts.ts'
 
@@ -16,11 +15,6 @@ const LOOKS: readonly RabbitLook[] = [
   { name: 'Cokelat', fur: '#c49a6c', inner: '#f2b8a2' },
   { name: 'Abu-abu', fur: '#b7b7c4', inner: '#ffc2d1' },
 ]
-
-function backdrop(rng: Rng, variant: number): Layer[] {
-  if (variant === 2) return snowField(rng)
-  return [...meadow(rng), ...flower(int(rng, 6, 10), 56, '#ff7aa2'), ...flower(56, 58, '#b48cff')]
-}
 
 function carrot(): Layer[] {
   return [
@@ -64,15 +58,11 @@ function rabbitLayers(look: RabbitLook): Layer[] {
 export const rabbit: Subject = {
   key: 'rabbit',
   count: 3,
-  create: (rng: Rng, variant: number): Design => {
+  create: (_rng: Rng, variant: number): Design => {
     const look = variantOf(LOOKS, variant)
     return {
       title: `Kelinci ${look.name}`,
-      layers: [
-        ...backdrop(rng, variant),
-        ...rabbitLayers(look),
-        ...(variant === 1 ? [] : carrot()),
-      ],
+      layers: [...rabbitLayers(look), ...(variant === 1 ? [] : carrot())],
     }
   },
 }

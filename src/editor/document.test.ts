@@ -67,6 +67,7 @@ describe('progress', () => {
     const colors = paintPixels(art, emptyColors(art), [0], '#ff0000')
     const saved = snapshotFromProgress(art, {
       artId: art.id,
+      mode: 'free',
       colors,
       percent: 5,
       completed: true,
@@ -79,6 +80,7 @@ describe('progress', () => {
 
     const wrongSize = snapshotFromProgress(art, {
       artId: art.id,
+      mode: 'free',
       colors: ['#ff0000'],
       percent: 0,
       completed: false,
@@ -93,6 +95,7 @@ describe('progress', () => {
     const progress = buildProgress(art, { colors, completed: false, recentColors: ['#ff0000'] }, 42)
     expect(progress).toEqual({
       artId: art.id,
+      mode: 'free',
       colors,
       percent: computePercent(art, colors),
       completed: false,

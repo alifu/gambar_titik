@@ -1,10 +1,11 @@
 import { ID } from '../i18n/id'
 import { deleteProgress, listProgress, saveProgress } from './repository'
-import type { ExportFile, Progress, UserProfile } from '../types/progress'
+import type { ColoringMode, ExportFile, Progress, UserProfile } from '../types/progress'
 
 export const MAX_IMPORT_BYTES = 10 * 1024 * 1024
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
-const EXPORT_VERSION = 1
+const EXPORT_VERSION = 2
+const MODES: readonly string[] = ['number', 'free'] satisfies ColoringMode[]
 
 export type PixelCountLookup = (artId: string) => number | undefined
 export type MergeMode = 'merge' | 'replace'
@@ -84,9 +85,11 @@ function parseProgress(
   getPixelCount: PixelCountLookup,
 ): ProgressParse {
   if (!isRec(raw)) return { error: ID.importError.badProgress(index) }
-  const { artId, percent, completed, recentColors, updatedAt } = raw
+  const { artId, mode, percent, completed, recentColors, updatedAt } = raw
   if (
     !isStr(artId) ||
+    !isStr(mode) ||
+    !MODES.includes(mode) ||
     !isNum(percent) ||
     typeof completed !== 'boolean' ||
     !Array.isArray(recentColors) ||
@@ -102,6 +105,7 @@ function parseProgress(
   return {
     progress: {
       artId,
+      mode: mode as ColoringMode,
       colors: checked.colors,
       percent,
       completed,

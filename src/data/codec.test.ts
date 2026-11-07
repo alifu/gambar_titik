@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Artwork } from '../types/artwork'
-import {
-  ArtworkDataError,
-  encodeArtwork,
-  encodeArtworks,
-  encodeOutline,
-  encodeReference,
-} from './codec'
+import { ArtworkDataError, encodeArtwork, encodeArtworks, encodeRows } from './codec'
 import { decodeArtworks } from './decode'
 
 const SAMPLE: Artwork = {
@@ -15,88 +9,64 @@ const SAMPLE: Artwork = {
   category: 'food',
   width: 3,
   height: 2,
-  outline: [true, true, false, false, false, true],
-  reference: ['#ff0000', '#ff0000', '#ffffff', '#ffffff', '#ffffff', '#000000'],
-  suggestedPalette: ['#ffffff', '#ff0000', '#000000'],
+  palette: [
+    { code: '0', name: 'Hitam', hex: '#000000' },
+    { code: '1', name: 'Merah', hex: '#ff0000' },
+  ],
+  pixels: [0, -1, 1, 0, 1, 1],
 }
 
-const encodedSample = () => JSON.parse(JSON.stringify(encodeArtworks([SAMPLE])))
+type Data = { version: number; artworks: Record<string, unknown>[] }
+const encodedSample = (): Data => JSON.parse(JSON.stringify(encodeArtworks([SAMPLE])))
+const withArtwork = (data: Data, patch: Record<string, unknown>) => ({
+  ...data,
+  artworks: [{ ...data.artworks[0], ...patch }],
+})
 
 describe('encode', () => {
-  it('RLE outline dimulai dari run false', () => {
-    expect(encodeOutline([true, true, false])).toEqual([0, 2, 1])
-    expect(encodeOutline([false, true, true])).toEqual([1, 2])
+  it('menulis baris ber-kode dengan titik untuk latar', () => {
+    expect(encodeRows(SAMPLE)).toEqual(['0.1', '011'])
+    expect(encodeArtwork(SAMPLE).palette).toEqual(SAMPLE.palette)
   })
 
-  it('RLE reference memakai indeks palet', () => {
-    expect(encodeReference(['#000000', '#000000', '#ffffff'], ['#ffffff', '#000000'])).toEqual([
-      1, 2, 0, 1,
-    ])
-  })
-
-  it('menolak warna di luar palet', () => {
-    expect(() => encodeReference(['#123456'], ['#ffffff'])).toThrow(ArtworkDataError)
+  it('menolak indeks di luar palet', () => {
+    expect(() => encodeRows({ ...SAMPLE, pixels: [0, 0, 0, 0, 0, 7] })).toThrow(ArtworkDataError)
   })
 })
 
 describe('decodeArtworks', () => {
   it('roundtrip encode → JSON → decode menghasilkan data identik', () => {
     expect(decodeArtworks(encodedSample())).toEqual([SAMPLE])
-    expect(encodeArtwork(SAMPLE).palette).toEqual(SAMPLE.suggestedPalette)
   })
 
-  const broken: [
-    string,
-    (data: { version: number; artworks: Record<string, unknown>[] }) => unknown,
-  ][] = [
+  const black = { code: '0', name: 'Hitam', hex: '#000000' }
+  const broken: [string, (data: Data) => unknown][] = [
     ['bukan objek', () => 'teks'],
-    ['versi salah', (data) => ({ ...data, version: 2 })],
+    ['versi lama', (data) => ({ ...data, version: 1 })],
     ['tanpa daftar gambar', (data) => ({ version: data.version })],
     ['gambar bukan objek', (data) => ({ ...data, artworks: [42] })],
-    ['id kosong', (data) => ({ ...data, artworks: [{ ...data.artworks[0], id: '' }] })],
-    ['judul bukan teks', (data) => ({ ...data, artworks: [{ ...data.artworks[0], title: 5 }] })],
+    ['id kosong', (data) => withArtwork(data, { id: '' })],
+    ['judul bukan teks', (data) => withArtwork(data, { title: 5 })],
+    ['kategori asing', (data) => withArtwork(data, { category: 'robot' })],
+    ['lebar tidak valid', (data) => withArtwork(data, { width: 0 })],
+    ['tinggi terlalu besar', (data) => withArtwork(data, { height: 9999 })],
+    ['palet bukan daftar', (data) => withArtwork(data, { palette: 'x' })],
+    ['palet kosong', (data) => withArtwork(data, { palette: [] })],
+    ['palet terlalu banyak', (data) => withArtwork(data, { palette: Array(13).fill(black) })],
+    ['entri palet bukan objek', (data) => withArtwork(data, { palette: ['#000000'] })],
+    ['kode tidak valid', (data) => withArtwork(data, { palette: [{ ...black, code: 'a' }] })],
+    ['nama kosong', (data) => withArtwork(data, { palette: [{ ...black, name: ' ' }] })],
+    ['hex tidak valid', (data) => withArtwork(data, { palette: [{ ...black, hex: 'hitam' }] })],
     [
-      'kategori asing',
-      (data) => ({ ...data, artworks: [{ ...data.artworks[0], category: 'robot' }] }),
+      'warna pertama bukan kode 0',
+      (data) => withArtwork(data, { palette: [{ ...black, code: '1' }] }),
     ],
-    ['lebar tidak valid', (data) => ({ ...data, artworks: [{ ...data.artworks[0], width: 0 }] })],
-    [
-      'tinggi terlalu besar',
-      (data) => ({ ...data, artworks: [{ ...data.artworks[0], height: 9999 }] }),
-    ],
-    [
-      'palet tidak valid',
-      (data) => ({ ...data, artworks: [{ ...data.artworks[0], palette: ['merah'] }] }),
-    ],
-    ['palet kosong', (data) => ({ ...data, artworks: [{ ...data.artworks[0], palette: [] }] })],
-    [
-      'reference ganjil',
-      (data) => ({ ...data, artworks: [{ ...data.artworks[0], reference: [0] }] }),
-    ],
-    [
-      'indeks warna di luar palet',
-      (data) => ({ ...data, artworks: [{ ...data.artworks[0], reference: [9, 6] }] }),
-    ],
-    [
-      'reference terlalu panjang',
-      (data) => ({ ...data, artworks: [{ ...data.artworks[0], reference: [0, 7] }] }),
-    ],
-    [
-      'reference terlalu pendek',
-      (data) => ({ ...data, artworks: [{ ...data.artworks[0], reference: [0, 5] }] }),
-    ],
-    [
-      'outline bukan daftar',
-      (data) => ({ ...data, artworks: [{ ...data.artworks[0], outline: 'x' }] }),
-    ],
-    [
-      'outline negatif',
-      (data) => ({ ...data, artworks: [{ ...data.artworks[0], outline: [-1, 7] }] }),
-    ],
-    [
-      'outline terlalu pendek',
-      (data) => ({ ...data, artworks: [{ ...data.artworks[0], outline: [2] }] }),
-    ],
+    ['kode ganda', (data) => withArtwork(data, { palette: [black, black] })],
+    ['rows bukan daftar', (data) => withArtwork(data, { rows: '0.1011' })],
+    ['jumlah baris salah', (data) => withArtwork(data, { rows: ['0.1'] })],
+    ['baris terlalu pendek', (data) => withArtwork(data, { rows: ['0.', '011'] })],
+    ['baris bukan teks', (data) => withArtwork(data, { rows: [12, '011'] })],
+    ['kode tidak dikenal', (data) => withArtwork(data, { rows: ['0.9', '011'] })],
     ['ID ganda', (data) => ({ ...data, artworks: [data.artworks[0], data.artworks[0]] })],
   ]
 
@@ -105,9 +75,11 @@ describe('decodeArtworks', () => {
   })
 
   it('pesan error berbahasa Indonesia dan menyebut lokasi', () => {
-    const data = encodedSample()
-    expect(() =>
-      decodeArtworks({ ...data, artworks: [{ ...data.artworks[0], width: -1 }] }),
-    ).toThrow(/Data gambar rusak \(gambar ke-1, food-apple-01\)/)
+    expect(() => decodeArtworks(withArtwork(encodedSample(), { width: -1 }))).toThrow(
+      /Data gambar rusak \(gambar ke-1, food-apple-01\)/,
+    )
+    expect(() => decodeArtworks(withArtwork(encodedSample(), { rows: ['0.Z', '011'] }))).toThrow(
+      'kode "Z" di baris ke-1 tidak ada di palet',
+    )
   })
 })

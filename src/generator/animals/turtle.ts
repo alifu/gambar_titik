@@ -1,4 +1,3 @@
-import { beach, meadow, underwater } from '../backdrops.ts'
 import { darken, lighten } from '../color.ts'
 import { INK, type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
@@ -29,12 +28,6 @@ const LOOKS: readonly TurtleLook[] = [
   { name: 'Laut', shell: '#2f9e8f', skin: '#9ad9c4', flippers: true },
   { name: 'Darat', shell: '#b57a3c', skin: '#d8c08a', flippers: false },
 ]
-
-function backdrop(rng: Rng, variant: number): Layer[] {
-  if (variant === 0) return meadow(rng)
-  if (variant === 1) return underwater(rng)
-  return beach(rng)
-}
 
 function hexagon(cx: number, cy: number, r: number): Shape {
   return polygon(
@@ -92,11 +85,11 @@ function headLayers(look: TurtleLook): Layer[] {
 export const turtle: Subject = {
   key: 'turtle',
   count: 3,
-  create: (rng: Rng, variant: number): Design => {
+  create: (_rng: Rng, variant: number): Design => {
     const look = variantOf(LOOKS, variant)
     return {
       title: `Kura-kura ${look.name}`,
-      layers: [...backdrop(rng, variant), ...limbs(look), ...shell(look), ...headLayers(look)],
+      layers: [...limbs(look), ...shell(look), ...headLayers(look)],
     }
   },
 }

@@ -17,6 +17,7 @@ import {
 const user: UserProfile = { id: 'budi', displayName: 'Budi', createdAt: 1, lastLoginAt: 2 }
 const progress = (artId: string): Progress => ({
   artId,
+  mode: 'free',
   colors: ['#ff0000', null],
   percent: 50,
   completed: false,

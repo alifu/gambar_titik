@@ -8,9 +8,13 @@ export function makeArtwork(id: string, title: string, category: Category): Artw
     category,
     width: 2,
     height: 2,
-    outline: [true, false, false, false],
-    reference: ['#000000', '#ff0000', '#00ff00', '#0000ff'],
-    suggestedPalette: ['#ff0000'],
+    palette: [
+      { code: '0', name: 'Hitam', hex: '#000000' },
+      { code: '1', name: 'Merah', hex: '#ff0000' },
+      { code: '2', name: 'Hijau', hex: '#00ff00' },
+      { code: '3', name: 'Biru', hex: '#0000ff' },
+    ],
+    pixels: [0, 1, 2, 3],
   }
 }
 
@@ -24,6 +28,7 @@ export const TEST_ARTWORKS: readonly Artwork[] = [
 export function makeProgress(artId: string, percent: number, completed = false): Progress {
   return {
     artId,
+    mode: 'free',
     colors: [null, '#ff0000', null, null],
     percent,
     completed,

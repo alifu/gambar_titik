@@ -8,9 +8,11 @@ const SAMPLE: Artwork = {
   category: 'animal',
   width: 2,
   height: 2,
-  outline: [true, false, false, false],
-  reference: ['#000000', '#ffffff', '#ffffff', '#ffffff'],
-  suggestedPalette: ['#ffffff', '#000000'],
+  palette: [
+    { code: '0', name: 'Hitam', hex: '#000000' },
+    { code: '1', name: 'Oranye', hex: '#ff9900' },
+  ],
+  pixels: [0, 1, -1, 1],
 }
 
 const jsonResponse = (body: unknown, status = 200) =>
@@ -75,7 +77,7 @@ describe('loadArtworks', () => {
   })
 
   it('bentuk data rusak ditolak', async () => {
-    fetchMock.mockResolvedValue(jsonResponse({ version: 1, artworks: [{ id: 'x' }] }))
+    fetchMock.mockResolvedValue(jsonResponse({ version: 2, artworks: [{ id: 'x' }] }))
     const { loadArtworks } = await freshLoader()
     await expect(loadArtworks()).rejects.toThrow(/Data gambar rusak/)
   })

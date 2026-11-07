@@ -1,4 +1,3 @@
-import { underwater } from '../backdrops.ts'
 import { darken, lighten } from '../color.ts'
 import { INK, WHITE, type Design, type Subject, variantOf } from '../design.ts'
 import { int, type Rng } from '../random.ts'
@@ -99,7 +98,6 @@ export const fish: Subject = {
     return {
       title: `Ikan ${look.name}`,
       layers: [
-        ...underwater(rng),
         ...fins(look),
         paint(BODY, look.body),
         ...bands(look),

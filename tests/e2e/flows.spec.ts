@@ -74,6 +74,7 @@ test('filter kategori dan pencarian di galeri', async ({ page }) => {
   await expect(page).toHaveURL(/kategori=hewan/)
 
   await page.getByRole('button', { name: 'Makanan', exact: true }).click()
+  await expect(page).toHaveURL(/kategori=makanan/)
   await expect(galleryCards(page)).toHaveCount(33)
 
   const firstTitle = await galleryCards(page).first().getByRole('link').innerText()

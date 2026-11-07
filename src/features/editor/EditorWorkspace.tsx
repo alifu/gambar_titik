@@ -26,7 +26,7 @@ type Props = {
 
 function usePalette(artwork: Artwork): readonly string[] {
   return useMemo(() => {
-    const normalized = artwork.suggestedPalette.map(normalizeHex)
+    const normalized = artwork.palette.map((entry) => normalizeHex(entry.hex))
     return [...new Set(normalized.filter((hex): hex is string => hex !== null))]
   }, [artwork])
 }

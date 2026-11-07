@@ -1,4 +1,3 @@
-import { polkaWall, tablecloth, woodTable } from '../backdrops.ts'
 import { darken, lighten } from '../color.ts'
 import { INK, type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
@@ -14,7 +13,6 @@ import {
   union,
   type Layer,
 } from '../raster.ts'
-import { shadow } from './parts.ts'
 
 interface AppleLook {
   readonly name: string
@@ -30,12 +28,6 @@ const LOOKS: readonly AppleLook[] = [
 
 const APPLE = union(circle(25, 35, 13), circle(39, 35, 13), ellipse(32, 43, 15, 11))
 const BITE = union(circle(48, 36, 5.5), circle(47, 44, 5))
-
-function backdrop(variant: number): Layer[] {
-  if (variant === 0) return tablecloth('#fff3d6', '#f28b82')
-  if (variant === 1) return woodTable('#e3f2fd')
-  return polkaWall('#e8f5e9', '#c8e6c9')
-}
 
 function fruit(look: AppleLook): Layer[] {
   const body = look.bitten ? subtract(APPLE, BITE) : APPLE
@@ -56,10 +48,9 @@ export const apple: Subject = {
   count: 3,
   create: (_rng: Rng, variant: number): Design => {
     const look = variantOf(LOOKS, variant)
-    const surface = variant === 1 ? '#d9a066' : '#ffffff'
     return {
       title: `Apel ${look.name}`,
-      layers: [...backdrop(variant), shadow(32, 55, 17, 3, surface), ...fruit(look)],
+      layers: [...fruit(look)],
     }
   },
 }

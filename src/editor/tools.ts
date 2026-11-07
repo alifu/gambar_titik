@@ -1,3 +1,4 @@
+import { isOutline } from '../render/pixelColors'
 import type { Artwork } from '../types/artwork'
 
 /** Warna user per pixel (`#rrggbb` atau null = belum diwarnai). */
@@ -76,7 +77,7 @@ export function paintPixels(
   color: string | null,
 ): PixelColors {
   const targets = indices.filter(
-    (i) => i >= 0 && i < colors.length && !artwork.outline[i] && colors[i] !== color,
+    (i) => i >= 0 && i < colors.length && !isOutline(artwork, i) && colors[i] !== color,
   )
   if (targets.length === 0) return colors
   const next = [...colors]
@@ -112,12 +113,12 @@ function neighbors4(artwork: Artwork, index: number): number[] {
 
 /** Semua indeks pada region non-outline 4-arah yang memuat `start` (kosong jika start = outline). */
 export function regionIndices(artwork: Artwork, start: number): number[] {
-  if (start < 0 || start >= artwork.outline.length || artwork.outline[start]) return []
+  if (start < 0 || start >= artwork.pixels.length || isOutline(artwork, start)) return []
   const visited = new Set<number>([start])
   const queue = [start]
   for (let head = 0; head < queue.length; head++) {
     neighbors4(artwork, queue[head])
-      .filter((n) => !artwork.outline[n] && !visited.has(n))
+      .filter((n) => !isOutline(artwork, n) && !visited.has(n))
       .forEach((n) => {
         visited.add(n)
         queue.push(n)
@@ -143,6 +144,6 @@ export function floodFill(
 
 /** Pipet: warna user pada pixel itu, atau null jika outline/belum diwarnai/di luar kanvas. */
 export function pickColor(artwork: Artwork, colors: PixelColors, index: number): string | null {
-  if (index < 0 || index >= colors.length || artwork.outline[index]) return null
+  if (index < 0 || index >= colors.length || isOutline(artwork, index)) return null
   return colors[index] ?? null
 }

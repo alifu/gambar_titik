@@ -27,6 +27,7 @@ export function snapshotFromProgress(
 export function buildProgress(artwork: Artwork, snapshot: EditorSnapshot, now: number): Progress {
   return {
     artId: artwork.id,
+    mode: 'free',
     colors: snapshot.colors,
     percent: computePercent(artwork, snapshot.colors),
     completed: snapshot.completed,

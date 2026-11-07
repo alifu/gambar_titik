@@ -1,13 +1,16 @@
 /**
- * Format ringkas `public/data/artworks.json`:
- * - `palette`: warna hex (≤16) = `suggestedPalette`
- * - `reference`: RLE pasangan [indeksPalet, panjang, indeksPalet, panjang, ...]
- * - `outline`: RLE panjang run bergantian, dimulai dari run `false`
+ * Format ringkas `public/data/artworks.json` (versi 2):
+ * - `palette`: daftar `{ code, name, hex }` (≤12), entri pertama kode `0` (hitam)
+ * - `rows`: satu teks per baris grid; tiap karakter = kode warna kotak, atau `.` untuk latar
+ *
+ * Contoh 3×2: `rows: ["0.1", "011"]`. Mudah dibaca (mirip lembar ber-kode) dan kecil setelah gzip.
  */
-import type { Artwork, Category } from '../types/artwork.ts'
+import { BACKGROUND, type Artwork, type Category, type PaletteEntry } from '../types/artwork.ts'
 
-export const ARTWORK_DATA_VERSION = 1
-export const MAX_PALETTE_COLORS = 16
+export const ARTWORK_DATA_VERSION = 2
+export const MAX_PALETTE_COLORS = 12
+/** Karakter latar di `rows`. */
+export const BACKGROUND_CHAR = '.'
 
 export interface EncodedArtwork {
   readonly id: string
@@ -15,9 +18,8 @@ export interface EncodedArtwork {
   readonly category: Category
   readonly width: number
   readonly height: number
-  readonly palette: readonly string[]
-  readonly reference: readonly number[]
-  readonly outline: readonly number[]
+  readonly palette: readonly PaletteEntry[]
+  readonly rows: readonly string[]
 }
 
 export interface ArtworkDataFile {
@@ -32,48 +34,26 @@ export class ArtworkDataError extends Error {
   }
 }
 
-function encodeRuns<T>(values: readonly T[], emit: (value: T, length: number) => void): void {
-  let start = 0
-  for (let index = 1; index <= values.length; index++) {
-    if (index === values.length || values[index] !== values[start]) {
-      emit(values[start], index - start)
-      start = index
-    }
+/** Ubah indeks palet per kotak menjadi baris teks ber-kode. */
+export function encodeRows(artwork: Artwork): string[] {
+  const { width, height, palette, pixels } = artwork
+  const charOf = (value: number): string => {
+    if (value === BACKGROUND) return BACKGROUND_CHAR
+    const entry = palette[value]
+    if (entry === undefined) throw new ArtworkDataError(`Indeks palet ${value} tidak ada`)
+    return entry.code
   }
-}
-
-export function encodeOutline(outline: readonly boolean[]): number[] {
-  const runs: number[] = []
-  if (outline[0] === true) runs.push(0)
-  encodeRuns(outline, (_, length) => runs.push(length))
-  return runs
-}
-
-export function encodeReference(
-  reference: readonly string[],
-  palette: readonly string[],
-): number[] {
-  const runs: number[] = []
-  encodeRuns(reference, (color, length) => {
-    const index = palette.indexOf(color)
-    if (index < 0) throw new ArtworkDataError(`Warna ${color} tidak ada di palet`)
-    runs.push(index, length)
-  })
-  return runs
+  return Array.from({ length: height }, (_, y) =>
+    pixels
+      .slice(y * width, (y + 1) * width)
+      .map(charOf)
+      .join(''),
+  )
 }
 
 export function encodeArtwork(artwork: Artwork): EncodedArtwork {
-  const { id, title, category, width, height, suggestedPalette } = artwork
-  return {
-    id,
-    title,
-    category,
-    width,
-    height,
-    palette: suggestedPalette,
-    reference: encodeReference(artwork.reference, suggestedPalette),
-    outline: encodeOutline(artwork.outline),
-  }
+  const { id, title, category, width, height, palette } = artwork
+  return { id, title, category, width, height, palette, rows: encodeRows(artwork) }
 }
 
 export function encodeArtworks(artworks: readonly Artwork[]): ArtworkDataFile {

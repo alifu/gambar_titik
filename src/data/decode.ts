@@ -1,8 +1,20 @@
-import type { Artwork, Category } from '../types/artwork.ts'
-import { ARTWORK_DATA_VERSION, ArtworkDataError, MAX_PALETTE_COLORS } from './codec.ts'
+import {
+  BACKGROUND,
+  OUTLINE_CODE,
+  type Artwork,
+  type Category,
+  type PaletteEntry,
+} from '../types/artwork.ts'
+import {
+  ARTWORK_DATA_VERSION,
+  ArtworkDataError,
+  BACKGROUND_CHAR,
+  MAX_PALETTE_COLORS,
+} from './codec.ts'
 
 const MAX_DIMENSION = 256
 const HEX_PATTERN = /^#[0-9a-f]{6}$/
+const CODE_PATTERN = /^[0-9A-Z]$/
 const CATEGORIES: readonly string[] = ['scenery', 'animal', 'food'] satisfies Category[]
 
 type Fields = Record<string, unknown>
@@ -19,9 +31,13 @@ function isCount(value: unknown, min: number): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= min
 }
 
+function isText(value: unknown): value is string {
+  return typeof value === 'string' && value.trim() !== ''
+}
+
 function requireText(fields: Fields, key: string, where: string): string {
   const value = fields[key]
-  if (typeof value !== 'string' || value.trim() === '') fail(where, `${key} harus berupa teks`)
+  if (!isText(value)) fail(where, `${key} harus berupa teks`)
   return value
 }
 
@@ -32,47 +48,48 @@ function requireDimension(fields: Fields, key: string, where: string): number {
   return value
 }
 
-function requirePalette(value: unknown, where: string): string[] {
-  const valid =
-    Array.isArray(value) &&
-    value.length >= 1 &&
-    value.length <= MAX_PALETTE_COLORS &&
-    value.every((color) => typeof color === 'string' && HEX_PATTERN.test(color))
-  if (!valid) fail(where, `palet harus berisi 1–${MAX_PALETTE_COLORS} warna hex`)
-  return value as string[]
+function toEntry(value: unknown, where: string): PaletteEntry {
+  if (!isRecord(value)) fail(where, 'entri palet bukan objek')
+  const { code, name, hex } = value
+  if (typeof code !== 'string' || !CODE_PATTERN.test(code))
+    fail(where, 'kode warna harus 0–9 atau A–Z')
+  if (!isText(name)) fail(where, `nama warna kode ${code} kosong`)
+  if (typeof hex !== 'string' || !HEX_PATTERN.test(hex))
+    fail(where, `warna kode ${code} harus hex #rrggbb`)
+  return { code, name, hex }
 }
 
-function decodeReference(
+function requirePalette(value: unknown, where: string): PaletteEntry[] {
+  if (!Array.isArray(value) || value.length < 1 || value.length > MAX_PALETTE_COLORS)
+    fail(where, `palet harus berisi 1–${MAX_PALETTE_COLORS} warna`)
+  const palette = value.map((entry) => toEntry(entry, where))
+  if (palette[0].code !== OUTLINE_CODE)
+    fail(where, `warna pertama palet harus kode ${OUTLINE_CODE}`)
+  if (new Set(palette.map((entry) => entry.code)).size !== palette.length)
+    fail(where, 'kode warna di palet tidak boleh sama')
+  return palette
+}
+
+function decodeRows(
   value: unknown,
-  palette: readonly string[],
-  size: number,
+  palette: readonly PaletteEntry[],
+  width: number,
+  height: number,
   where: string,
-): string[] {
-  if (!Array.isArray(value) || value.length % 2 !== 0)
-    fail(where, 'reference harus pasangan indeks dan panjang')
-  const colors: string[] = []
-  for (let index = 0; index < value.length; index += 2) {
-    const [colorIndex, length] = [value[index], value[index + 1]]
-    if (!isCount(colorIndex, 0) || colorIndex >= palette.length)
-      fail(where, 'indeks warna di luar palet')
-    if (!isCount(length, 1) || colors.length + length > size)
-      fail(where, 'panjang reference tidak sesuai ukuran')
-    for (let step = 0; step < length; step++) colors.push(palette[colorIndex])
-  }
-  if (colors.length !== size) fail(where, 'panjang reference tidak sesuai ukuran')
-  return colors
-}
-
-function decodeOutline(value: unknown, size: number, where: string): boolean[] {
-  if (!Array.isArray(value)) fail(where, 'outline harus berupa daftar angka')
-  const outline: boolean[] = []
-  value.forEach((length: unknown, run) => {
-    if (!isCount(length, 0) || outline.length + length > size)
-      fail(where, 'panjang outline tidak sesuai ukuran')
-    for (let step = 0; step < length; step++) outline.push(run % 2 === 1)
+): number[] {
+  if (!Array.isArray(value) || value.length !== height)
+    fail(where, `rows harus berisi ${height} baris`)
+  const indexOf = new Map(palette.map((entry, index) => [entry.code, index]))
+  indexOf.set(BACKGROUND_CHAR, BACKGROUND)
+  return value.flatMap((row: unknown, y) => {
+    if (typeof row !== 'string' || row.length !== width)
+      fail(where, `baris ke-${y + 1} harus ${width} karakter`)
+    return [...row].map((char) => {
+      const index = indexOf.get(char)
+      if (index === undefined) fail(where, `kode "${char}" di baris ke-${y + 1} tidak ada di palet`)
+      return index
+    })
   })
-  if (outline.length !== size) fail(where, 'panjang outline tidak sesuai ukuran')
-  return outline
 }
 
 function decodeArtwork(value: unknown, position: number): Artwork {
@@ -92,9 +109,8 @@ function decodeArtwork(value: unknown, position: number): Artwork {
     category: category as Category,
     width,
     height,
-    outline: decodeOutline(value.outline, width * height, at),
-    reference: decodeReference(value.reference, palette, width * height, at),
-    suggestedPalette: palette,
+    palette,
+    pixels: decodeRows(value.rows, palette, width, height, at),
   }
 }
 

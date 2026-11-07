@@ -18,6 +18,7 @@ const prog = (
   colors: (string | null)[] = ['#ff0000', null],
 ): Progress => ({
   artId,
+  mode: 'free',
   colors,
   percent: 50,
   completed: false,
@@ -65,7 +66,7 @@ describe('parseImportFile', () => {
   })
 
   it('rejects a wrong version', () => {
-    fails(text({ ...base(), version: 2 }))
+    fails(text({ ...base(), version: 1 }))
   })
 
   it('rejects invalid user, exportedAt and progress list', () => {
@@ -78,6 +79,7 @@ describe('parseImportFile', () => {
   it('rejects malformed progress entries', () => {
     fails(text({ ...base(), progress: [5] }))
     fails(text({ ...base(), progress: [{ ...prog('a'), completed: 'yes' }] }))
+    fails(text({ ...base(), progress: [{ ...prog('a'), mode: 'acak' }] }))
     fails(text({ ...base(), progress: [{ ...prog('a'), recentColors: ['red'] }] }))
   })
 

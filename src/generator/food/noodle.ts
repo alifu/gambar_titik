@@ -1,4 +1,4 @@
-import { plate, polkaWall, woodTable } from '../backdrops.ts'
+import { plate } from '../backdrops.ts'
 import { darken } from '../color.ts'
 import { WHITE, type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
@@ -7,9 +7,13 @@ import {
   circle,
   curve,
   ellipse,
+  detailLine,
   inkLayer,
   intersect,
   paint,
+  plainPaint,
+  polar,
+  polygon,
   polyline,
   rect,
   union,
@@ -26,7 +30,7 @@ function noodleStrands(area: Shape): Layer {
   const strands = [27, 30, 33].map((y, index) =>
     curve([10, y + 2], [32, y - 4 + index], [54, y + 2], 0.6),
   )
-  return inkLayer(intersect(area, union(...strands)), darken(NOODLE, 0.35))
+  return detailLine(intersect(area, union(...strands)), darken(NOODLE, 0.3))
 }
 
 function bowl(color: string): Layer[] {
@@ -91,13 +95,24 @@ function friedNoodle(): Layer[] {
   )
   return [
     ...plate(32, 44, 30, 14),
-    paint(pile, '#d98c3a'),
-    inkLayer(intersect(pile, strands), darken('#d98c3a', 0.35)),
-    paint(ellipse(40, 30, 7, 4.5), WHITE),
-    paint(circle(41, 30, 2.6), '#ffb703'),
-    paint(union(circle(13, 47, 3.4), circle(51, 47, 3.4)), '#9ccc65'),
-    paint(union(circle(13, 47, 1.6), circle(51, 47, 1.6)), '#e6f5c9'),
-    paint(union(circle(20, 52, 2.8), circle(44, 52, 2.8)), '#e8463c'),
+    paint(pile, '#d9903f'),
+    detailLine(intersect(pile, strands), '#9a5a22'),
+    paint(
+      polar(38, 29, (angle) => 8 + Math.sin(angle * 5) * 0.8),
+      WHITE,
+    ),
+    paint(circle(38.5, 29.5, 3.6), '#ffb703'),
+    paint(union(circle(12, 46, 4.2), circle(52, 46, 4.2)), '#7cb342'),
+    plainPaint(union(circle(12, 46, 2.4), circle(52, 46, 2.4)), '#dcedc8'),
+    paint(union(circle(21, 52.5, 3.4), circle(43, 52.5, 3.4)), '#e8463c'),
+    paint(
+      polygon([
+        [26, 30],
+        [28, 23],
+        [31, 31],
+      ]),
+      '#ffe9a8',
+    ),
   ]
 }
 
@@ -123,9 +138,7 @@ export const noodle: Subject = {
   count: 3,
   create: (_rng: Rng, variant: number): Design => {
     const names = ['Mi Ayam', 'Ramen', 'Mi Goreng'] as const
-    const backdrop =
-      variant === 1 ? polkaWall('#fff3e0', '#ffe0b2') : woodTable('#e3f2fd', '#c98b5a', 48)
     const food = variant === 2 ? friedNoodle() : noodleBowl(variant === 0 ? 'chicken' : 'ramen')
-    return { title: variantOf(names, variant), layers: [...backdrop, ...food] }
+    return { title: variantOf(names, variant), layers: [...food] }
   },
 }

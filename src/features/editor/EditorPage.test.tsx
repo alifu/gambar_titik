@@ -1,3 +1,4 @@
+import { isOutline } from '../../render/pixelColors'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -22,7 +23,7 @@ vi.mock('../../storage/repository', async (importOriginal) => ({
 const getArtworkMock = vi.mocked(getArtworkById)
 const getProgressMock = vi.mocked(getProgress)
 const saveProgressMock = vi.mocked(saveProgress)
-const FIRST_COLOR = art.suggestedPalette[0]
+const FIRST_COLOR = art.palette[1].hex
 const USER = { id: 'budi', displayName: 'Budi', createdAt: 1, lastLoginAt: 1 }
 
 function renderEditor(artId = art.id) {
@@ -88,9 +89,10 @@ describe('EditorPage', () => {
   })
 
   it('memulihkan progres tersimpan', async () => {
-    const colors = art.outline.map((isOutline, i) => (!isOutline && i < 2 ? '#123456' : null))
+    const colors = art.pixels.map((_, i) => (!isOutline(art, i) && i < 2 ? '#123456' : null))
     await renderReady({
       artId: art.id,
+      mode: 'free',
       colors,
       percent: 11,
       completed: true,

@@ -11,6 +11,7 @@ import { ProfilePage } from './ProfilePage'
 
 const prog = (artId: string, updatedAt: number, completed = false): Progress => ({
   artId,
+  mode: 'free',
   colors: ['#ff0000', null],
   percent: 50,
   completed,

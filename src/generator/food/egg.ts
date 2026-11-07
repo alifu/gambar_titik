@@ -1,4 +1,4 @@
-import { plate, tablecloth, woodTable } from '../backdrops.ts'
+import { plate } from '../backdrops.ts'
 import { lighten } from '../color.ts'
 import { WHITE, type Design, type Subject, variantOf } from '../design.ts'
 import { range, type Rng } from '../random.ts'
@@ -61,9 +61,7 @@ export const egg: Subject = {
   count: 3,
   create: (rng: Rng, variant: number): Design => {
     const names = ['Telur Ceplok', 'Telur Rebus', 'Sarapan Telur'] as const
-    const backdrop =
-      variant === 1 ? tablecloth('#e8f5e9', '#ffcc80', 30) : woodTable('#fff8e1', '#c98b5a', 0)
     const food = variant === 0 ? pan(rng) : variant === 1 ? boiled() : breakfast(rng)
-    return { title: variantOf(names, variant), layers: [...backdrop, ...food] }
+    return { title: variantOf(names, variant), layers: [...food] }
   },
 }
