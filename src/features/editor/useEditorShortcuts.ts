@@ -46,6 +46,11 @@ function handleHistoryKey(event: KeyboardEvent, actions: ShortcutActions): boole
 
 function handlePlainKey(event: KeyboardEvent, actions: ShortcutActions): boolean {
   if (event.ctrlKey || event.metaKey || event.altKey) return false
+  // Shift+0 selalu reset zoom (di mode nomor tombol 0 dipakai untuk kode 0).
+  if (event.shiftKey && event.code === 'Digit0') {
+    actions.onZoomReset()
+    return true
+  }
   if (actions.onPlainKey?.(event.key)) return true
   const tool = TOOL_KEYS[event.key.toLowerCase()]
   if (tool) actions.onTool(tool)

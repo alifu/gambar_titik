@@ -114,4 +114,10 @@ describe('PrintPage', () => {
       expect(screen.getByRole('heading', { name: 'Kucing Uji' })).toBeInTheDocument(),
     )
   })
+
+  it('falls back to a generic message when the rejection is not an Error', async () => {
+    getArt.mockImplementationOnce(() => Promise.reject('bukan error' as unknown as Error))
+    setup()
+    expect(await screen.findByRole('alert')).toHaveTextContent(ID.editor.loadFailed)
+  })
 })

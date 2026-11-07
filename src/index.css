@@ -1235,6 +1235,66 @@ button:focus-visible {
 
 @media (max-width: 47.99rem) {
   .editor--number .editor-canvas-area {
-    height: min(62vh, 36rem, calc(100vw - 1rem));
+    height: min(54vh, 36rem, calc(100vw - 1rem));
+  }
+
+  /* Legenda ringkas: strip horizontal yang menempel di bawah layar (urutan terakhir,
+     jadi tidak menutupi alat/aksi saat digulir sampai bawah). */
+  .editor--number .editor-panel {
+    display: contents;
+  }
+
+  .editor--number .number-legend {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    order: 99;
+    margin: 0 calc(var(--space-2) * -1);
+    padding: 0.4rem var(--space-2) calc(0.4rem + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    box-shadow: 0 -4px 12px rgb(0 0 0 / 0.08);
+  }
+
+  .editor--number .number-legend .palette-title,
+  .editor--number .number-legend-hint,
+  .editor--number .number-legend-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .editor--number .number-legend-list {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+    scroll-snap-type: x proximity;
+  }
+
+  .editor--number .number-legend-list li {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .editor--number .number-legend-item {
+    grid-template-columns: auto;
+    grid-template-areas:
+      'swatch'
+      'code'
+      'count';
+    justify-items: center;
+    gap: 0.1rem;
+    width: 3.4rem;
+    min-height: 3.6rem;
+    padding: 0.25rem;
+  }
+
+  .editor--number .number-legend-swatch {
+    width: 100%;
+    height: 0.9rem;
   }
 }

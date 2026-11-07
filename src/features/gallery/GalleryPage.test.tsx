@@ -41,7 +41,7 @@ describe('GalleryPage', () => {
     setup()
     expect(screen.getByText(ID.gallery.loading)).toBeInTheDocument()
     expect(await screen.findByText('Kucing Oranye')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByText('45%')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Bebas 45%')).toBeInTheDocument())
     expect(screen.getByText(ID.gallery.done)).toBeInTheDocument()
     expect(screen.getAllByRole('listitem')).toHaveLength(4)
   })
@@ -57,6 +57,13 @@ describe('GalleryPage', () => {
     setup()
     const link = (await screen.findByText('Kelinci')).closest('a')
     expect(link).toHaveAttribute('href', '/warnai/animal-2')
+  })
+
+  it('shows the badge of the most recent mode', async () => {
+    await saveProgress('budi', { ...makeProgress('animal-1', 20), mode: 'number', updatedAt: 5 })
+    setup()
+    expect(await screen.findByText('Nomor 20%')).toBeInTheDocument()
+    expect(screen.queryByText('Bebas 45%')).not.toBeInTheDocument()
   })
 
   it('offers both coloring modes on each card', async () => {
@@ -118,7 +125,7 @@ describe('GalleryPage', () => {
     const user = userEvent.setup()
     setup()
     await screen.findByText('Kelinci')
-    await waitFor(() => expect(screen.getByText('45%')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('Bebas 45%')).toBeInTheDocument())
     const group = screen.getByRole('group', { name: ID.gallery.statusGroup })
     await user.click(within(group).getByRole('button', { name: ID.gallery.statuses.inProgress }))
     expect(screen.getAllByRole('listitem')).toHaveLength(1)

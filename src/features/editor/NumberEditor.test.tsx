@@ -136,6 +136,20 @@ describe('Editor mode sesuai nomor', () => {
     expect(screen.queryByRole('button', { name: ID.editor.tool.eraser })).toBeNull()
   })
 
+  it('Shift+0 mereset zoom sedangkan 0 memilih kode 0', async () => {
+    const user = userEvent.setup()
+    await renderReady()
+    const stage = () => document.querySelector<HTMLElement>('.editor-canvas-stage')
+    const before = stage()?.style.width
+    await user.keyboard('+')
+    expect(stage()?.style.width).not.toBe(before)
+    await user.click(entry('2'))
+    await user.keyboard('0')
+    expect(entry('0')).toHaveAttribute('aria-pressed', 'true')
+    await user.keyboard('{Shift>}0{/Shift}')
+    expect(stage()?.style.width).toBe(before)
+  })
+
   it('memilih warna lewat klik dan tombol kode; tombol lain tetap pintasan', async () => {
     const user = userEvent.setup()
     await renderReady()

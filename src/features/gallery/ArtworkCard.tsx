@@ -15,7 +15,9 @@ interface ArtworkCardProps {
 function badgeText(progress: Progress | undefined): string | null {
   const status = getArtworkStatus(progress)
   if (status === 'done') return ID.gallery.done
-  if (status === 'inProgress' && progress) return `${progress.percent}%`
+  if (status === 'inProgress' && progress) {
+    return `${ID.gallery.modeShort[progress.mode]} ${progress.percent}%`
+  }
   return null
 }
 
@@ -26,7 +28,7 @@ function ArtworkCardBase({ artwork, progress }: ArtworkCardProps) {
   return (
     <li className="gallery-card">
       <Link to={editorPath(artwork.id)} className="gallery-card-link">
-        <ArtworkThumbnail artwork={artwork} colors={progress?.colors} />
+        <ArtworkThumbnail artwork={artwork} colors={progress?.colors} mode={progress?.mode} />
         <span className="gallery-card-title">{artwork.title}</span>
         {badge && <span className="gallery-badge">{badge}</span>}
       </Link>

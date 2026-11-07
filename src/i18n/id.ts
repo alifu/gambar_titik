@@ -71,6 +71,7 @@ export const ID = {
     categoryGroup: 'Kategori',
     statusGroup: 'Status',
     done: 'Selesai ✓',
+    modeShort: { number: 'Nomor', free: 'Bebas' },
     categories: {
       all: 'Semua',
       scenery: 'Pemandangan',
@@ -106,7 +107,7 @@ export const ID = {
     zoom: 'Zoom',
     zoomIn: 'Perbesar (+)',
     zoomOut: 'Perkecil (−)',
-    zoomReset: 'Ukuran awal (0)',
+    zoomReset: 'Ukuran awal (0, atau Shift+0)',
     colors: 'Warna',
     colorPicker: 'Pilih warna bebas',
     hexLabel: 'Kode HEX',
