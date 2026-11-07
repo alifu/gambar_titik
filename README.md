@@ -41,6 +41,33 @@ npm run test:e2e       # E2E Playwright terhadap build produksi (build + preview
 
 E2E memakai Chromium; pasang sekali dengan `npx playwright install chromium`.
 
+## Menjalankan di jaringan lokal (HP / tablet di Wi-Fi yang sama)
+
+```bash
+npm run lan
+```
+
+Perintah ini membuat build produksi lalu menyalakan server di port `4173` untuk semua perangkat di jaringan. Alamatnya tampil di terminal sebagai `Network`, misalnya `http://192.168.88.17:4173/`. Buka alamat itu dari HP yang terhubung ke Wi-Fi yang sama.
+
+**Batasan HTTP:** browser hanya mengaktifkan service worker di HTTPS atau `localhost`. Lewat `http://<IP>:4173` aplikasi tetap bisa dipakai dan progres tetap tersimpan di perangkat masing-masing, tetapi **tidak bisa di-install dan tidak bisa offline**.
+
+### Opsional: HTTPS agar bisa di-install dan offline
+
+1. Pasang mkcert di Mac ini: `brew install mkcert`, lalu `mkcert -install`.
+2. Buat sertifikat untuk IP Mac (ganti dengan IP kamu):
+   ```bash
+   mkdir -p .certs
+   mkcert -cert-file .certs/lan.pem -key-file .certs/lan-key.pem 192.168.88.17 localhost
+   ```
+3. Jalankan `npm run lan` lagi. Server otomatis memakai HTTPS jika kedua file di `.certs/` ada. Buka `https://192.168.88.17:4173/`.
+4. Setiap HP perlu memercayai sertifikat root mkcert (file `rootCA.pem` di folder hasil `mkcert -CAROOT`):
+   - **Android:** kirim `rootCA.pem` ke HP, lalu Setelan → Keamanan → Enkripsi & kredensial → Instal sertifikat → Sertifikat CA.
+   - **iPhone/iPad:** kirim `rootCA.pem` (mis. lewat AirDrop), pasang profilnya di Setelan → Profil Diunduh, lalu aktifkan di Setelan → Umum → Mengenai → Pengaturan Kepercayaan Sertifikat.
+
+Folder `.certs/` di-ignore git. Jangan bagikan file `rootCA-key.pem`.
+
+**IP berubah?** Jika router memberi IP baru ke Mac, buat ulang sertifikat di langkah 2 (atau atur IP tetap / DHCP reservation di router).
+
 ## Cara kerja pengguna (tanpa database)
 
 - Tidak ada server dan tidak ada akun. Saat masuk, kamu mengetik nama; nama dinormalisasi (huruf kecil, spasi dirapikan) menjadi ID, jadi `  budi   SANTOSO ` dan `Budi Santoso` adalah pengguna yang sama.
