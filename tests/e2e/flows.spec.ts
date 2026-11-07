@@ -10,7 +10,7 @@ import {
 
 async function openFirstArtwork(page: Page) {
   await galleryCards(page).first().getByRole('link').first().click()
-  await expect(page.getByRole('button', { name: /Ember/ })).toBeVisible()
+  await expect(page.getByRole('group', { name: 'Cara mewarnai', exact: true })).toBeVisible()
 }
 
 test('login, warnai, kembali ke galeri: badge persen muncul', async ({ page }) => {

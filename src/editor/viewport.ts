@@ -20,6 +20,10 @@ export const MAX_ZOOM = 64
 export const ZOOM_STEP = 1.25
 /** Garis grid ditampilkan mulai zoom ini. */
 export const GRID_MIN_ZOOM = 10
+/** Kode warna di kotak (mode nomor) ditampilkan mulai zoom ini. */
+export const LABEL_MIN_ZOOM = 8
+/** Di bawah zoom ini kode masih kecil: tampilkan petunjuk untuk memperbesar. */
+export const LABEL_READABLE_ZOOM = 10
 /** Ruang kosong di sekitar gambar saat "ukuran awal" (px). */
 const FIT_MARGIN = 8
 

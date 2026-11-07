@@ -34,7 +34,7 @@ export function buildProgress(
     artId: artwork.id,
     mode,
     colors: snapshot.colors,
-    percent: computePercent(artwork, snapshot.colors),
+    percent: computePercent(artwork, snapshot.colors, mode),
     completed: snapshot.completed,
     recentColors: snapshot.recentColors,
     updatedAt: now,

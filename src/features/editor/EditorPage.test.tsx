@@ -26,9 +26,9 @@ const saveProgressMock = vi.mocked(saveProgress)
 const FIRST_COLOR = art.palette[1].hex
 const USER = { id: 'budi', displayName: 'Budi', createdAt: 1, lastLoginAt: 1 }
 
-function renderEditor(artId = art.id) {
+function renderEditor(artId = art.id, query = '?mode=bebas') {
   return render(
-    <MemoryRouter initialEntries={[`/warnai/${artId}`]}>
+    <MemoryRouter initialEntries={[`/warnai/${artId}${query}`]}>
       <Routes>
         <Route path="/warnai/:artId" element={<EditorPage />} />
         <Route path="/galeri" element={<h1>Halaman galeri</h1>} />

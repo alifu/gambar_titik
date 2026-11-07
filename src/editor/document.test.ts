@@ -103,4 +103,15 @@ describe('progress', () => {
       updatedAt: 42,
     })
   })
+
+  it('buildProgress mode nomor menghitung persen kotak benar', () => {
+    const correct = paintPixels(art, emptyColors(art), [0, 1], art.palette[1].hex)
+    const wrong = paintPixels(art, emptyColors(art), [0, 1], '#ff0000')
+    const snapshot = { completed: false, recentColors: [] }
+    const done = buildProgress(art, { ...snapshot, colors: correct }, 1, 'number')
+    expect(done.mode).toBe('number')
+    expect(done.percent).toBe(computePercent(art, correct, 'number'))
+    expect(done.percent).toBeGreaterThan(0)
+    expect(buildProgress(art, { ...snapshot, colors: wrong }, 1, 'number').percent).toBe(0)
+  })
 })

@@ -1,28 +1,34 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { PixelCanvas } from '../../components/PixelCanvas'
 import { normalizeHex } from '../../editor/color'
-import { snapshotFromProgress, type EditorSnapshot } from '../../editor/progress'
+import { snapshotFromProgress } from '../../editor/progress'
 import { ID } from '../../i18n/id'
 import { computePercent, resolveAllPixelColors } from '../../render/pixelColors'
 import type { Artwork } from '../../types/artwork'
-import type { Progress } from '../../types/progress'
-import { galleryPathWithQuery } from '../gallery/galleryPath'
+import type { ColoringMode, Progress } from '../../types/progress'
 import { ColorPanel } from './ColorPanel'
 import { ConfirmDialog } from './ConfirmDialog'
 import { EditorActions } from './EditorActions'
-import { SaveIndicator } from './SaveIndicator'
+import { EditorHeader } from './EditorHeader'
+import { NumberWorkspace } from './NumberWorkspace'
 import { Toolbar } from './Toolbar'
-import { useAutoSave } from './useAutoSave'
 import { useColoring } from './useColoring'
 import { useEditorShortcuts } from './useEditorShortcuts'
 import { useViewportState } from './useViewportState'
+import { useWorkspaceState } from './useWorkspaceState'
 
 type Props = {
   artwork: Artwork
+  mode: ColoringMode
   progress: Progress | undefined
   userId: string
 }
+
+export function EditorWorkspace({ mode, ...props }: Props) {
+  return mode === 'number' ? <NumberWorkspace {...props} /> : <FreeWorkspace {...props} />
+}
+
+type WorkspaceProps = Omit<Props, 'mode'>
 
 function usePalette(artwork: Artwork): readonly string[] {
   return useMemo(() => {
@@ -31,21 +37,21 @@ function usePalette(artwork: Artwork): readonly string[] {
   }, [artwork])
 }
 
-export function EditorWorkspace({ artwork, progress, userId }: Props) {
+/** Mode bebas: garis tepi (kode 0) terkunci, alat lengkap, warna apa saja. */
+function FreeWorkspace({ artwork, progress, userId }: WorkspaceProps) {
   const [initial] = useState(() => snapshotFromProgress(artwork, progress))
   const coloring = useColoring(artwork, initial)
   const view = useViewportState(artwork.width, artwork.height)
   const palette = usePalette(artwork)
-  const [completed, setCompleted] = useState(initial.completed)
-  const [isReferenceVisible, setIsReferenceVisible] = useState(false)
-  const [isResetOpen, setIsResetOpen] = useState(false)
   const { colors, recentColors } = coloring
-
-  const snapshot = useMemo<EditorSnapshot>(
-    () => ({ colors, completed, recentColors }),
-    [colors, completed, recentColors],
-  )
-  const save = useAutoSave(userId, artwork, snapshot)
+  const ws = useWorkspaceState({
+    userId,
+    artwork,
+    mode: 'free',
+    colors,
+    recentColors,
+    initialCompleted: initial.completed,
+  })
   const isSpaceHeld = useEditorShortcuts({
     onTool: coloring.setTool,
     onUndo: coloring.undo,
@@ -55,32 +61,26 @@ export function EditorWorkspace({ artwork, progress, userId }: Props) {
     onZoomReset: view.reset,
   })
   const pixels = useMemo(
-    () => resolveAllPixelColors(artwork, colors, isReferenceVisible ? 'reference' : 'user'),
-    [artwork, colors, isReferenceVisible],
+    () => resolveAllPixelColors(artwork, colors, ws.isReferenceVisible ? 'reference' : 'user'),
+    [artwork, colors, ws.isReferenceVisible],
   )
 
   const confirmReset = () => {
     coloring.reset()
-    setIsResetOpen(false)
+    ws.setIsResetOpen(false)
   }
 
   return (
     <section className="editor" aria-labelledby="editor-title">
-      <header className="editor-header">
-        <Link to={galleryPathWithQuery()} className="editor-back">
-          {ID.editor.backToGallery}
-        </Link>
-        <h1 id="editor-title" className="editor-title">
-          {artwork.title}
-        </h1>
-        <p className="editor-status">
-          <span className="editor-percent">
-            {ID.editor.progress(computePercent(artwork, colors))}
-          </span>
-          {completed && <span className="editor-badge">{ID.editor.completedBadge}</span>}
-          <SaveIndicator status={save.status} onRetry={save.retry} />
-        </p>
-      </header>
+      <EditorHeader
+        title={artwork.title}
+        mode="free"
+        percent={computePercent(artwork, colors, 'free')}
+        isCompleted={ws.completed}
+        saveStatus={ws.save.status}
+        onSaveRetry={ws.save.retry}
+        onModeChange={(next) => void ws.switchMode(next)}
+      />
       <div className="editor-body">
         <div className="editor-canvas-area">
           <PixelCanvas
@@ -120,21 +120,22 @@ export function EditorWorkspace({ artwork, progress, userId }: Props) {
           <EditorActions
             artwork={artwork}
             colors={colors}
-            isCompleted={completed}
-            isReferenceVisible={isReferenceVisible}
-            onReferenceChange={setIsReferenceVisible}
-            onToggleCompleted={() => setCompleted((c) => !c)}
-            onReset={() => setIsResetOpen(true)}
+            mode="free"
+            isCompleted={ws.completed}
+            isReferenceVisible={ws.isReferenceVisible}
+            onReferenceChange={ws.setIsReferenceVisible}
+            onToggleCompleted={() => ws.setCompleted((c) => !c)}
+            onReset={() => ws.setIsResetOpen(true)}
           />
         </aside>
       </div>
-      {isResetOpen && (
+      {ws.isResetOpen && (
         <ConfirmDialog
           title={ID.editor.resetTitle}
           message={ID.editor.resetMessage}
           confirmLabel={ID.editor.resetConfirm}
           onConfirm={confirmReset}
-          onCancel={() => setIsResetOpen(false)}
+          onCancel={() => ws.setIsResetOpen(false)}
         />
       )}
     </section>

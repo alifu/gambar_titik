@@ -59,6 +59,23 @@ describe('GalleryPage', () => {
     expect(link).toHaveAttribute('href', '/warnai/animal-2')
   })
 
+  it('offers both coloring modes on each card', async () => {
+    setup()
+    await screen.findByText('Kelinci')
+    const group = screen.getByRole('group', { name: ID.mode.cardGroup('Kelinci') })
+    const number = within(group).getByRole('link', {
+      name: ID.mode.cardLink('Kelinci', ID.mode.number),
+    })
+    const free = within(group).getByRole('link', {
+      name: ID.mode.cardLink('Kelinci', ID.mode.free),
+    })
+    expect(number).toHaveAttribute('href', '/warnai/animal-2?mode=nomor')
+    expect(number).toHaveTextContent(ID.mode.number)
+    expect(free).toHaveAttribute('href', '/warnai/animal-2?mode=bebas')
+    const card = group.closest('li')!
+    expect(within(card).getAllByRole('link')[0]).toHaveAttribute('href', '/warnai/animal-2')
+  })
+
   it('links each card to its print sheet with an accessible label', async () => {
     setup()
     const link = await screen.findByRole('link', { name: ID.print.linkLabel('Kelinci') })

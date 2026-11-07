@@ -135,6 +135,29 @@ export const ID = {
     saveFailed: (message: string) => `Gagal menyimpan. ${message}`,
     saveRetry: 'Simpan lagi',
   },
+  mode: {
+    group: 'Cara mewarnai',
+    number: 'Sesuai nomor',
+    free: 'Bebas',
+    cardGroup: (title: string) => `Pilih cara mewarnai ${title}`,
+    cardLink: (title: string, mode: string) => `Warnai ${title}: ${mode}`,
+  },
+  numberMode: {
+    legend: 'Legenda warna',
+    legendHint: 'Pilih warna, lalu warnai kotak yang kodenya sama. Bisa juga tekan tombol kode.',
+    entryLabel: (code: string, name: string, remaining: number) =>
+      remaining === 0
+        ? `Kode ${code}, ${name}, tuntas`
+        : `Kode ${code}, ${name}, sisa ${remaining} kotak`,
+    doneMark: '✓',
+    brush: 'Kuas (B)',
+    fillArea: 'Isi area (G)',
+    zoomHint: 'Perbesar (+) atau cubit dengan dua jari agar nomor di kotak lebih jelas.',
+    wrongCell: (code: string) => `Kotak itu bukan kode ${code}.`,
+    doneTitle: 'Selesai! 🎉',
+    doneMessage: 'Semua kotak sudah berwarna sesuai nomor.',
+    viewResult: 'Lihat hasil',
+  },
   print: {
     title: 'Lembar cetak',
     loading: 'Menyiapkan lembar cetak…',

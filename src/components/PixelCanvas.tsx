@@ -7,12 +7,14 @@ import {
 } from 'react'
 import {
   GRID_MIN_ZOOM,
+  LABEL_MIN_ZOOM,
   panBy,
   screenToIndex,
   zoomAt,
   type Size,
   type Viewport,
 } from '../editor/viewport'
+import { CellLabels } from './CellLabels'
 
 const WHEEL_ZOOM_SENSITIVITY = 0.0015
 const MIDDLE_BUTTON = 1
@@ -24,6 +26,12 @@ export const TOUCH_MOVE_THRESHOLD_PX = 6
 
 type ViewportUpdate = (vp: Viewport) => Viewport
 
+/** Kotak yang ditandai sebentar (mis. ditolak di mode nomor). `id` baru = animasi diulang. */
+export interface FlashMark {
+  readonly id: number
+  readonly indices: readonly number[]
+}
+
 type Props = {
   width: number
   height: number
@@ -33,6 +41,9 @@ type Props = {
   /** true saat spasi ditahan: drag = geser kanvas. */
   isPanMode: boolean
   label: string
+  /** Teks per kotak (kode warna); ditampilkan mulai LABEL_MIN_ZOOM. */
+  labels?: readonly string[]
+  flash?: FlashMark | null
   onViewportChange: (update: ViewportUpdate) => void
   onResize: (size: Size) => void
   onStrokeStart: (index: number) => void
@@ -148,7 +159,7 @@ function useWheelZoom(
  * wheel = zoom, dua jari = zoom + geser.
  */
 export function PixelCanvas(props: Props) {
-  const { width, height, pixels, viewport, isPanMode, label } = props
+  const { width, height, pixels, viewport, isPanMode, label, labels, flash } = props
   const canvasRef = useCanvasPainter(width, pixels)
   const containerRef = useContainerSize(props.onResize)
   useWheelZoom(containerRef, props.onViewportChange)
@@ -183,13 +194,29 @@ export function PixelCanvas(props: Props) {
           aria-label={label}
           style={{ imageRendering: 'pixelated' }}
         />
-        {zoom >= GRID_MIN_ZOOM && (
+        {labels && zoom >= LABEL_MIN_ZOOM && (
+          <CellLabels width={width} height={height} labels={labels} zoom={zoom} />
+        )}
+        {zoom >= (labels ? LABEL_MIN_ZOOM : GRID_MIN_ZOOM) && (
           <div
             className="editor-canvas-grid"
             data-testid="pixel-grid"
             style={{ backgroundSize: `${zoom}px ${zoom}px` }}
           />
         )}
+        {flash?.indices.map((i) => (
+          <div
+            key={`${flash.id}-${i}`}
+            className="number-reject"
+            data-testid="reject-mark"
+            style={{
+              left: (i % width) * zoom,
+              top: Math.floor(i / width) * zoom,
+              width: zoom,
+              height: zoom,
+            }}
+          />
+        ))}
         {hoverIndex !== null && (
           <div
             className="editor-canvas-hover"

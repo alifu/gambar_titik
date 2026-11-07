@@ -2,14 +2,23 @@ import { BRUSH_SIZES, type BrushSize, type Tool } from '../../editor/tools'
 import { ID } from '../../i18n/id'
 import { ToolIcon, type IconName } from './ToolIcons'
 
-const TOOLS: readonly { readonly tool: Tool; readonly icon: IconName }[] = [
-  { tool: 'brush', icon: 'brush' },
-  { tool: 'bucket', icon: 'bucket' },
-  { tool: 'eraser', icon: 'eraser' },
-  { tool: 'picker', icon: 'picker' },
+export interface ToolOption {
+  readonly tool: Tool
+  readonly icon: IconName
+  readonly label: string
+}
+
+/** Alat mode bebas. */
+const FREE_TOOLS: readonly ToolOption[] = [
+  { tool: 'brush', icon: 'brush', label: ID.editor.tool.brush },
+  { tool: 'bucket', icon: 'bucket', label: ID.editor.tool.bucket },
+  { tool: 'eraser', icon: 'eraser', label: ID.editor.tool.eraser },
+  { tool: 'picker', icon: 'picker', label: ID.editor.tool.picker },
 ]
 
 type Props = {
+  /** Daftar alat yang ditampilkan (bawaan: alat mode bebas). */
+  tools?: readonly ToolOption[]
   tool: Tool
   brushSize: BrushSize
   canUndo: boolean
@@ -24,19 +33,19 @@ type Props = {
 }
 
 export function Toolbar(props: Props) {
-  const { tool, brushSize } = props
+  const { tool, brushSize, tools = FREE_TOOLS } = props
   const isSizeRelevant = tool === 'brush' || tool === 'eraser'
   return (
     <div className="toolbar">
       <div className="toolbar-group" role="group" aria-label={ID.editor.tools}>
-        {TOOLS.map((item) => (
+        {tools.map((item) => (
           <button
             key={item.tool}
             type="button"
             className="toolbar-button"
             aria-pressed={tool === item.tool}
-            aria-label={ID.editor.tool[item.tool]}
-            title={ID.editor.tool[item.tool]}
+            aria-label={item.label}
+            title={item.label}
             onClick={() => props.onToolChange(item.tool)}
           >
             <ToolIcon name={item.icon} />

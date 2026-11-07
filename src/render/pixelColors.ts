@@ -54,7 +54,7 @@ function countsTowardPercent(artwork: Artwork, index: number, mode: ColoringMode
 function isDone(artwork: Artwork, colors: PixelColors, index: number, mode: ColoringMode): boolean {
   const color = colors[index]
   if (color == null) return false
-  return mode === 'free' || color.toLowerCase() === referenceColor(artwork, index)
+  return mode === 'free' || color.toLowerCase() === referenceColor(artwork, index)?.toLowerCase()
 }
 
 /**

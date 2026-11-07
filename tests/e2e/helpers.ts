@@ -19,8 +19,9 @@ export function percentBadges(page: Page) {
   return page.getByRole('link', { name: /\d+%$/ })
 }
 
-/** Warnai area gambar dengan ember di beberapa titik, supaya pasti ada region yang terisi. */
+/** Pindah ke mode bebas, lalu warnai area gambar dengan ember di beberapa titik. */
 export async function paintSomeRegions(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Bebas', exact: true }).click()
   await page.getByRole('button', { name: /Ember/ }).click()
   const canvas = page.getByRole('img', { name: /Kanvas mewarnai/ })
   await expect(canvas).toBeVisible()

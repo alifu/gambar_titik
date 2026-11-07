@@ -54,18 +54,22 @@ export function useAutoSave(
   const isMountedRef = useRef(true)
   const persisted = state.saved ?? baseline
 
+  /** Simpan satu snapshot; true jika berhasil. Error ditampilkan lewat status. */
   const save = useCallback(
-    async (snap: EditorSnapshot) => {
+    async (snap: EditorSnapshot): Promise<boolean> => {
       const seq = ++seqRef.current
       setState((s) => ({ ...s, isSaving: true, error: null }))
       try {
         await saveProgress(userId, buildProgress(artwork, snap, Date.now(), mode))
         if (seq === seqRef.current) setState({ saved: snap, isSaving: false, error: null })
+        return true
       } catch (error) {
         if (!isMountedRef.current) reportUnmountedError(error)
-        if (seq !== seqRef.current) return
-        const message = ID.editor.saveFailed(errorMessage(error, ''))
-        setState((s) => ({ ...s, isSaving: false, error: message }))
+        if (seq === seqRef.current) {
+          const message = ID.editor.saveFailed(errorMessage(error, ''))
+          setState((s) => ({ ...s, isSaving: false, error: message }))
+        }
+        return false
       }
     },
     [userId, artwork, mode],
@@ -100,6 +104,13 @@ export function useAutoSave(
     }
   }, [flush])
 
+  /** Simpan sekarang juga (mis. sebelum ganti mode). true jika tidak ada yang gagal disimpan. */
+  const saveNow = async (): Promise<boolean> => {
+    const snap = pendingRef.current ?? (state.error === null ? null : latestRef.current)
+    pendingRef.current = null
+    return snap ? save(snap) : true
+  }
+
   const retry = () => void save(latestRef.current)
-  return { status: deriveStatus(state, snapshot, baseline), retry }
+  return { status: deriveStatus(state, snapshot, baseline), retry, saveNow }
 }
