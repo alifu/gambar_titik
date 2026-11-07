@@ -15,17 +15,20 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: null,
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
+        id: '/',
         name: APP_NAME,
         short_name: APP_NAME,
-        description: 'Aplikasi mewarnai pixel art secara bebas',
+        description:
+          'Mewarnai pixel art sesuai nomor atau secara bebas — pemandangan, hewan, dan makanan. Bisa dicetak dan dipakai offline.',
         lang: 'id',
         start_url: '/',
         scope: '/',
         display: 'standalone',
         theme_color: THEME_COLOR,
         background_color: BACKGROUND_COLOR,
+        categories: ['games', 'kids', 'entertainment'],
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
@@ -36,9 +39,26 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        screenshots: [
+          {
+            src: 'screenshots/galeri-wide.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Galeri 100 gambar pixel art',
+          },
+          {
+            src: 'screenshots/editor-narrow.png',
+            sizes: '390x844',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Mewarnai sesuai nomor',
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,json}'],
+        globIgnores: ['**/screenshots/**'],
         maximumFileSizeToCacheInBytes: MAX_PRECACHE_FILE_BYTES,
         navigateFallback: '/index.html',
       },
