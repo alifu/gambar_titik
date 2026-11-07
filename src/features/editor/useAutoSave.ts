@@ -3,6 +3,7 @@ import { buildProgress, type EditorSnapshot } from '../../editor/progress'
 import { ID } from '../../i18n/id'
 import { saveProgress } from '../../storage/repository'
 import type { Artwork } from '../../types/artwork'
+import type { ColoringMode } from '../../types/progress'
 import { errorMessage } from './useEditorData'
 
 export const AUTOSAVE_DELAY_MS = 500
@@ -39,7 +40,12 @@ function reportUnmountedError(error: unknown) {
  * Auto-save ke IndexedDB dengan debounce. Snapshot awal tidak disimpan ulang.
  * Perubahan yang belum tersimpan langsung disimpan saat halaman disembunyikan/ditutup atau unmount.
  */
-export function useAutoSave(userId: string, artwork: Artwork, snapshot: EditorSnapshot) {
+export function useAutoSave(
+  userId: string,
+  artwork: Artwork,
+  snapshot: EditorSnapshot,
+  mode: ColoringMode = 'free',
+) {
   const [baseline] = useState(snapshot)
   const [state, setState] = useState<SaveState>({ saved: null, isSaving: false, error: null })
   const pendingRef = useRef<EditorSnapshot | null>(null)
@@ -53,7 +59,7 @@ export function useAutoSave(userId: string, artwork: Artwork, snapshot: EditorSn
       const seq = ++seqRef.current
       setState((s) => ({ ...s, isSaving: true, error: null }))
       try {
-        await saveProgress(userId, buildProgress(artwork, snap, Date.now()))
+        await saveProgress(userId, buildProgress(artwork, snap, Date.now(), mode))
         if (seq === seqRef.current) setState({ saved: snap, isSaving: false, error: null })
       } catch (error) {
         if (!isMountedRef.current) reportUnmountedError(error)
@@ -62,7 +68,7 @@ export function useAutoSave(userId: string, artwork: Artwork, snapshot: EditorSn
         setState((s) => ({ ...s, isSaving: false, error: message }))
       }
     },
-    [userId, artwork],
+    [userId, artwork, mode],
   )
 
   const flush = useCallback(() => {

@@ -85,7 +85,7 @@ describe('EditorPage', () => {
     expect(screen.getByRole('status')).toHaveTextContent(ID.editor.loading)
     expect(await screen.findByRole('heading', { name: art.title })).toBeInTheDocument()
     expect(percentText(0)).toBeInTheDocument()
-    expect(getProgressMock).toHaveBeenCalledWith('budi', art.id)
+    expect(getProgressMock).toHaveBeenCalledWith('budi', art.id, 'free')
   })
 
   it('memulihkan progres tersimpan', async () => {

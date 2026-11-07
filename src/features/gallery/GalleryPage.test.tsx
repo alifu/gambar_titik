@@ -1,4 +1,5 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
+import { createStore, set } from 'idb-keyval'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -43,6 +44,13 @@ describe('GalleryPage', () => {
     await waitFor(() => expect(screen.getByText('45%')).toBeInTheDocument())
     expect(screen.getByText(ID.gallery.done)).toBeInTheDocument()
     expect(screen.getAllByRole('listitem')).toHaveLength(4)
+  })
+
+  it('shows a one-time notice when legacy progress was discarded', async () => {
+    const legacy = createStore('gambar-titik', 'kv')
+    await set('progress:budi:animal-1', { artId: 'animal-1', colors: [] }, legacy)
+    setup()
+    expect(await screen.findByText(ID.gallery.legacyDiscarded)).toBeInTheDocument()
   })
 
   it('links each card to the editor', async () => {

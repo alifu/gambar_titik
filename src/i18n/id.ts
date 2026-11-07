@@ -51,7 +51,9 @@ export const ID = {
     tooLarge: 'File terlalu besar (maksimal 10 MB).',
     badJson: 'File bukan JSON yang valid.',
     notObject: 'Isi file tidak sesuai format cadangan.',
-    badVersion: 'Versi file cadangan tidak didukung.',
+    oldVersion:
+      'File cadangan dari versi lama tidak bisa dipakai karena ukuran gambar sudah berubah.',
+    badVersion: 'Versi file cadangan tidak dikenal.',
     badUser: 'Data profil di file tidak valid.',
     badProgressList: 'Daftar progres di file tidak valid.',
     badProgress: (index: number) => `Progres nomor ${index + 1} tidak valid.`,
@@ -62,6 +64,7 @@ export const ID = {
   gallery: {
     title: 'Galeri',
     loading: 'Memuat galeri...',
+    legacyDiscarded: 'Progres versi lama tidak bisa dipakai lagi karena ukuran gambar berubah.',
     retry: 'Coba lagi',
     empty: 'Tidak ada gambar yang cocok.',
     searchLabel: 'Cari judul gambar',

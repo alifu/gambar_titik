@@ -3,7 +3,7 @@ import { getArtworkById } from '../../data/artworks'
 import { ID } from '../../i18n/id'
 import { getProgress } from '../../storage/repository'
 import type { Artwork } from '../../types/artwork'
-import type { Progress } from '../../types/progress'
+import type { ColoringMode, Progress } from '../../types/progress'
 
 export type EditorDataState =
   | { readonly status: 'loading' }
@@ -16,21 +16,25 @@ const LOADING: EditorDataState = { status: 'loading' }
 export const errorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error && error.message ? error.message : fallback
 
-async function loadEditorData(artId: string, userId: string): Promise<EditorDataState> {
+async function loadEditorData(
+  artId: string,
+  userId: string,
+  mode: ColoringMode,
+): Promise<EditorDataState> {
   const artwork = await getArtworkById(artId)
   if (!artwork) return { status: 'not-found' }
-  const progress = await getProgress(userId, artId)
+  const progress = await getProgress(userId, artId, mode)
   return { status: 'ready', artwork, progress }
 }
 
 /** Muat artwork + progres user. `retry` memuat ulang setelah error. */
-export function useEditorData(artId: string, userId: string) {
+export function useEditorData(artId: string, userId: string, mode: ColoringMode = 'free') {
   const [state, setState] = useState<EditorDataState>(LOADING)
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let isActive = true
-    loadEditorData(artId, userId).then(
+    loadEditorData(artId, userId, mode).then(
       (next) => {
         if (isActive) setState(next)
       },
@@ -42,7 +46,7 @@ export function useEditorData(artId: string, userId: string) {
     return () => {
       isActive = false
     }
-  }, [artId, userId, attempt])
+  }, [artId, userId, mode, attempt])
 
   const retry = () => {
     setState(LOADING)
