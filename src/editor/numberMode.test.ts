@@ -13,6 +13,7 @@ import {
   mismatchedIndices,
   numberDisplayColors,
   numberLabels,
+  numberModeEmptyColor,
   paletteIndexForKey,
   remainingByPalette,
 } from './numberMode'
@@ -139,7 +140,41 @@ describe('tampilan dan keyboard', () => {
     expect(view[0]).toBe(NUMBER_EMPTY_FILL)
     expect(view[1]).toBe(RED)
     expect(view[2]).toBe(NUMBER_HIGHLIGHT_FILL)
-    expect(view[4]).toBe(NUMBER_EMPTY_FILL)
+    expect(view[4]).toBe(numberModeEmptyColor(art, 4))
+  })
+
+  it('numberModeEmptyColor: latar putih, abu terang berbeda per kode, makin gelap = makin pekat', () => {
+    expect(numberModeEmptyColor(art, 0)).toBe(NUMBER_EMPTY_FILL)
+    expect(numberModeEmptyColor(art, 99)).toBe(NUMBER_EMPTY_FILL)
+    const outline = numberModeEmptyColor(art, 4)
+    const red = numberModeEmptyColor(art, 1)
+    const green = numberModeEmptyColor(art, 6)
+    expect(new Set([outline, red, green]).size).toBe(3)
+    expect(outline).toBe('#b0b0b0')
+    expect(parseInt(outline.slice(1, 3), 16)).toBeLessThan(parseInt(red.slice(1, 3), 16))
+    expect(parseInt(red.slice(1, 3), 16)).toBeLessThan(parseInt(green.slice(1, 3), 16))
+    expect(parseInt(green.slice(1, 3), 16)).toBeLessThanOrEqual(0xf4)
+  })
+
+  it('numberModeEmptyColor: hex tak valid → putih', () => {
+    const bad: Artwork = { ...art, palette: [{ code: '0', name: 'x', hex: 'merah' }], pixels: [0] }
+    expect(numberModeEmptyColor(bad, 0)).toBe(NUMBER_EMPTY_FILL)
+  })
+
+  it('abu kotak kosong kontras ≥ 4.5:1 dengan warna kode dan highlight juga', () => {
+    const lum = (hex: string) => {
+      const [r, g, b] = [1, 3, 5].map((k) => {
+        const c = parseInt(hex.slice(k, k + 2), 16) / 255
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
+    const ratio = (a: string, b: string) => {
+      const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x)
+      return (hi + 0.05) / (lo + 0.05)
+    }
+    expect(ratio('#3b3447', '#b0b0b0')).toBeGreaterThanOrEqual(4.5)
+    expect(ratio('#3b3447', NUMBER_HIGHLIGHT_FILL)).toBeGreaterThanOrEqual(4.5)
   })
 
   it('numberLabels: latar "·", kode disembunyikan setelah benar', () => {

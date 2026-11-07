@@ -5,6 +5,8 @@ import {
   clampZoom,
   fitViewport,
   panBy,
+  readableStartViewport,
+  LABEL_READABLE_ZOOM,
   screenToIndex,
   zoomAt,
 } from './viewport'
@@ -57,5 +59,24 @@ describe('viewport', () => {
 
   it('fitViewport aman untuk kontainer berukuran 0', () => {
     expect(fitViewport(art, { width: 0, height: 0 }).zoom).toBe(MIN_ZOOM)
+  })
+
+  it('readableStartViewport: gambar besar di kontainer kecil mulai di zoom terbaca, rata atas', () => {
+    const vp = readableStartViewport({ width: 48, height: 40 }, { width: 374, height: 374 })
+    expect(vp.zoom).toBe(LABEL_READABLE_ZOOM)
+    expect(vp.panX).toBe((374 - 480) / 2)
+    expect(vp.panY).toBe(8)
+  })
+
+  it('readableStartViewport: bila pas layar sudah terbaca, sama dengan fitViewport', () => {
+    const container = { width: 800, height: 600 }
+    const size = { width: 48, height: 40 }
+    expect(readableStartViewport(size, container)).toEqual(fitViewport(size, container))
+  })
+
+  it('readableStartViewport: gambar pendek dipusatkan vertikal', () => {
+    const vp = readableStartViewport({ width: 100, height: 5 }, { width: 200, height: 200 })
+    expect(vp.zoom).toBe(LABEL_READABLE_ZOOM)
+    expect(vp.panY).toBe((200 - 50) / 2)
   })
 })

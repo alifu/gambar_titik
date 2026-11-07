@@ -65,7 +65,7 @@ export function useNumberWorkspace(
 ) {
   const [initial] = useState(() => snapshotFromProgress(artwork, progress))
   const coloring = useNumberColoring(artwork, initial)
-  const view = useViewportState(artwork.width, artwork.height)
+  const view = useViewportState(artwork.width, artwork.height, true)
   const { colors, selected } = coloring
   const ws = useWorkspaceState({
     userId,

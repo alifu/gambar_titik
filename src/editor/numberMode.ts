@@ -5,7 +5,12 @@ import type { PixelColors } from './tools'
 /** Warna kotak yang belum terisi (dan kotak latar) di mode nomor. */
 export const NUMBER_EMPTY_FILL = '#ffffff'
 /** Warna kotak kosong yang kodenya sama dengan warna terpilih (highlight). */
-export const NUMBER_HIGHLIGHT_FILL = '#cfc9e0'
+export const NUMBER_HIGHLIGHT_FILL = '#c4b5fd'
+/** Rentang abu kotak kosong berkode: warna contoh tergelap → terang (kontras ke kode ≥ 4.5:1). */
+const EMPTY_GRAY_DARKEST = 0xb0
+const EMPTY_GRAY_LIGHTEST = 0xf4
+const LUMA_WEIGHTS = [0.299, 0.587, 0.114] as const
+const MAX_CHANNEL = 255
 
 function isInRange(artwork: Artwork, index: number): boolean {
   return Number.isInteger(index) && index >= 0 && index < artwork.pixels.length
@@ -133,7 +138,25 @@ export function paletteIndexForKey(artwork: Artwork, key: string): number | null
   return index < 0 ? null : index
 }
 
-/** Warna tampilan mode nomor: benar = warna kode, kosong = putih, kosong berkode terpilih = highlight. */
+/**
+ * Abu terang untuk kotak kosong non-latar `index`, diturunkan dari kecerahan warna contohnya
+ * agar bentuk gambar tetap terlihat saat kode tidak terbaca. Latar/di luar grid = putih.
+ */
+export function numberModeEmptyColor(artwork: Artwork, index: number): string {
+  const hex = referenceColor(artwork, index)
+  if (hex === null || !/^#[0-9a-f]{6}$/i.test(hex)) return NUMBER_EMPTY_FILL
+  const luma = LUMA_WEIGHTS.reduce(
+    (sum, weight, c) => sum + weight * parseInt(hex.slice(1 + c * 2, 3 + c * 2), 16),
+    0,
+  )
+  const level = Math.round(
+    EMPTY_GRAY_DARKEST + (luma / MAX_CHANNEL) * (EMPTY_GRAY_LIGHTEST - EMPTY_GRAY_DARKEST),
+  )
+  const channel = level.toString(16).padStart(2, '0')
+  return `#${channel}${channel}${channel}`
+}
+
+/** Warna tampilan mode nomor: benar = warna kode, kosong = abu terang per kode, terpilih = highlight. */
 export function numberDisplayColors(
   artwork: Artwork,
   colors: PixelColors,
@@ -142,7 +165,7 @@ export function numberDisplayColors(
   return artwork.pixels.map((value, i) => {
     if (value === BACKGROUND) return NUMBER_EMPTY_FILL
     if (isCellCorrect(artwork, colors, i)) return referenceColor(artwork, i) ?? NUMBER_EMPTY_FILL
-    return value === selected ? NUMBER_HIGHLIGHT_FILL : NUMBER_EMPTY_FILL
+    return value === selected ? NUMBER_HIGHLIGHT_FILL : numberModeEmptyColor(artwork, i)
   })
 }
 

@@ -281,11 +281,17 @@ describe('Editor mode sesuai nomor', () => {
     expect(percent(0)).toBeInTheDocument()
   })
 
-  it('petunjuk zoom muncul jika kotak masih kecil', async () => {
+  it('kotak pas-layar kecil: mulai di zoom terbaca, petunjuk muncul saat diperkecil, Ukuran awal = pas layar', async () => {
     vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(40)
     vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(40)
+    const user = userEvent.setup()
     renderEditor()
+    await waitFor(() => expect(stage().style.width).toBe('40px'))
+    expect(screen.queryByText(ID.numberMode.zoomHint)).toBeNull()
+    await user.keyboard('-')
     expect(await screen.findByText(ID.numberMode.zoomHint)).toBeInTheDocument()
+    await user.keyboard('{Shift>}0{/Shift}')
+    await waitFor(() => expect(stage().style.width).toBe('24px'))
   })
 })
 

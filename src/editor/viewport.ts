@@ -43,6 +43,22 @@ export function fitViewport(art: Size, container: Size): Viewport {
   }
 }
 
+/**
+ * Tampilan awal mode nomor: sama dengan `fitViewport` bila kotak sudah cukup besar untuk kode
+ * terbaca; jika tidak, mulai di zoom `LABEL_READABLE_ZOOM`, rata tengah horizontal dan rata atas.
+ */
+export function readableStartViewport(art: Size, container: Size): Viewport {
+  const fit = fitViewport(art, container)
+  if (fit.zoom >= LABEL_READABLE_ZOOM) return fit
+  const zoom = LABEL_READABLE_ZOOM
+  const artH = art.height * zoom
+  return {
+    zoom,
+    panX: (container.width - art.width * zoom) / 2,
+    panY: artH <= container.height ? (container.height - artH) / 2 : FIT_MARGIN,
+  }
+}
+
 /** Ubah zoom dengan titik layar (anchorX, anchorY) tetap di tempat. */
 export function zoomAt(vp: Viewport, factor: number, anchorX: number, anchorY: number): Viewport {
   const zoom = clampZoom(vp.zoom * factor)
