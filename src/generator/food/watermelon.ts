@@ -1,4 +1,3 @@
-import { tablecloth, woodTable } from '../backdrops.ts'
 import { INK, type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
 import {
@@ -15,7 +14,6 @@ import {
   type Point,
   type Shape,
 } from '../raster.ts'
-import { shadow } from './parts.ts'
 
 const RIND = '#2e7d32'
 const PITH = '#d8f5a2'
@@ -83,12 +81,10 @@ export const watermelon: Subject = {
   count: 3,
   create: (_rng: Rng, variant: number): Design => {
     const names = ['Setengah', 'Potong', 'Utuh'] as const
-    const backdrop =
-      variant === 1 ? woodTable('#e1f5fe', '#d9a066', 44) : tablecloth('#fffde7', '#a5d6a7', 44)
     const fruit = variant === 0 ? half() : variant === 1 ? wedge(32, 22, 0.8) : whole()
     return {
       title: `Semangka ${variantOf(names, variant)}`,
-      layers: [...backdrop, shadow(32, 56, 24, 3, '#ffffff'), ...fruit],
+      layers: [...fruit],
     }
   },
 }

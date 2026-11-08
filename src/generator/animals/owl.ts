@@ -1,4 +1,3 @@
-import { nightSky, snowField } from '../backdrops.ts'
 import { darken, lighten } from '../color.ts'
 import { INK, WHITE, type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
@@ -27,11 +26,6 @@ const LOOKS: readonly OwlLook[] = [
   { name: 'Abu-abu', feather: '#8d8f9e', iris: '#ff9f1c' },
   { name: 'Salju', feather: '#eef0f5', iris: '#ffd447' },
 ]
-
-function backdrop(rng: Rng, variant: number): Layer[] {
-  if (variant === 2) return snowField(rng)
-  return nightSky(rng, variant === 0 ? '#2b3a67' : '#3d2f5c')
-}
 
 function bodyLayers(look: OwlLook): Layer[] {
   const belly = lighten(look.feather, 0.5)
@@ -80,11 +74,11 @@ function faceLayers(look: OwlLook): Layer[] {
 export const owl: Subject = {
   key: 'owl',
   count: 3,
-  create: (rng: Rng, variant: number): Design => {
+  create: (_rng: Rng, variant: number): Design => {
     const look = variantOf(LOOKS, variant)
     return {
       title: `Burung Hantu ${look.name}`,
-      layers: [...backdrop(rng, variant), ...bodyLayers(look), ...faceLayers(look)],
+      layers: [...bodyLayers(look), ...faceLayers(look)],
     }
   },
 }

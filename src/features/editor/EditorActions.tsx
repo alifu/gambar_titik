@@ -1,13 +1,15 @@
 import { useState, type MouseEvent } from 'react'
+import { Link } from 'react-router-dom'
 import type { PixelColors } from '../../editor/tools'
 import { ID } from '../../i18n/id'
 import type { Artwork } from '../../types/artwork'
-import { downloadPng } from './downloadPng'
-import { errorMessage } from './useEditorData'
+import type { ColoringMode } from '../../types/progress'
+import { useDownloadPng } from './useDownloadPng'
 
 type Props = {
   artwork: Artwork
   colors: PixelColors
+  mode: ColoringMode
   isCompleted: boolean
   isReferenceVisible: boolean
   onReferenceChange: (isVisible: boolean) => void
@@ -19,21 +21,13 @@ type Props = {
 const isKeyboardClick = (event: MouseEvent) => event.detail === 0
 
 export function EditorActions(props: Props) {
-  const { artwork, colors, isCompleted, isReferenceVisible, onReferenceChange } = props
-  const [downloadError, setDownloadError] = useState<string | null>(null)
+  const { artwork, colors, mode, isCompleted, isReferenceVisible, onReferenceChange } = props
+  const png = useDownloadPng(artwork, colors, mode)
   const [isHolding, setIsHolding] = useState(false)
 
   const hold = (isDown: boolean) => {
     setIsHolding(isDown)
     onReferenceChange(isDown)
-  }
-  const handleDownload = async () => {
-    setDownloadError(null)
-    try {
-      await downloadPng(artwork, colors)
-    } catch (error) {
-      setDownloadError(errorMessage(error, ID.editor.downloadFailed))
-    }
   }
 
   return (
@@ -65,12 +59,19 @@ export function EditorActions(props: Props) {
       <button type="button" className="editor-button-secondary" onClick={props.onReset}>
         {ID.editor.reset}
       </button>
-      <button type="button" onClick={() => void handleDownload()}>
+      <button type="button" onClick={() => void png.download()}>
         {ID.editor.download}
       </button>
-      {downloadError && (
+      <Link
+        to={`/cetak/${artwork.id}`}
+        className="editor-button-secondary"
+        aria-label={ID.print.linkLabel(artwork.title)}
+      >
+        {ID.print.link}
+      </Link>
+      {png.error && (
         <p className="editor-error" role="alert">
-          {downloadError}
+          {png.error}
         </p>
       )}
     </div>

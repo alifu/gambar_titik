@@ -11,6 +11,7 @@ import { ProfilePage } from './ProfilePage'
 
 const prog = (artId: string, updatedAt: number, completed = false): Progress => ({
   artId,
+  mode: 'free',
   colors: ['#ff0000', null],
   percent: 50,
   completed,
@@ -47,6 +48,16 @@ describe('ProfilePage', () => {
     expect(screen.getByText('Budi')).toBeInTheDocument()
     expect(await screen.findByText(`${ID.profile.artworksStarted}: 2`)).toBeInTheDocument()
     expect(screen.getByText(`${ID.profile.artworksCompleted}: 1`)).toBeInTheDocument()
+  })
+
+  it('counts an artwork once when it was colored in both modes', async () => {
+    await saveProgress('budi', { ...prog('a', 9, false), mode: 'number' })
+    setup()
+    expect(await screen.findByText(`${ID.profile.artworksStarted}: 2`)).toBeInTheDocument()
+    // Progres terbaru 'a' (mode nomor, belum selesai) menentukan status.
+    await waitFor(() =>
+      expect(screen.getByText(`${ID.profile.artworksCompleted}: 0`)).toBeInTheDocument(),
+    )
   })
 
   it('downloads a backup', async () => {

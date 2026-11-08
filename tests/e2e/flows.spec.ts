@@ -9,8 +9,8 @@ import {
 } from './helpers.ts'
 
 async function openFirstArtwork(page: Page) {
-  await galleryCards(page).first().getByRole('link').click()
-  await expect(page.getByRole('button', { name: /Ember/ })).toBeVisible()
+  await galleryCards(page).first().getByRole('link').first().click()
+  await expect(page.getByRole('group', { name: 'Cara mewarnai', exact: true })).toBeVisible()
 }
 
 test('login, warnai, kembali ke galeri: badge persen muncul', async ({ page }) => {
@@ -74,9 +74,10 @@ test('filter kategori dan pencarian di galeri', async ({ page }) => {
   await expect(page).toHaveURL(/kategori=hewan/)
 
   await page.getByRole('button', { name: 'Makanan', exact: true }).click()
+  await expect(page).toHaveURL(/kategori=makanan/)
   await expect(galleryCards(page)).toHaveCount(33)
 
-  const firstTitle = await galleryCards(page).first().getByRole('link').innerText()
+  const firstTitle = await galleryCards(page).first().getByRole('link').first().innerText()
   const query = firstTitle.split('\n')[0].slice(0, 4)
   await page.getByLabel('Cari judul gambar').fill(query)
   await expect(galleryCards(page).first()).toContainText(query)

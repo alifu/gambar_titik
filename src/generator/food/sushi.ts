@@ -1,18 +1,6 @@
-import { polkaWall } from '../backdrops.ts'
 import { WHITE, type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
-import {
-  capsule,
-  circle,
-  fill,
-  intersect,
-  paint,
-  rect,
-  roundRect,
-  union,
-  type Layer,
-} from '../raster.ts'
-import { shadow } from './parts.ts'
+import { capsule, circle, intersect, paint, rect, roundRect, union, type Layer } from '../raster.ts'
 
 type Piece = 'salmon' | 'tamago' | 'maki-salmon' | 'maki-cucumber'
 
@@ -79,16 +67,10 @@ export const sushi: Subject = {
   count: 3,
   create: (_rng: Rng, variant: number): Design => {
     const look = variantOf(LOOKS, variant)
-    const backdrop =
-      variant === 1
-        ? [fill('#fde7e7'), paint(circle(52, 14, 8), '#ff6b6b')]
-        : polkaWall('#f3e6c8', '#e8d4a8')
     return {
       title: `Sushi ${look.name}`,
       layers: [
-        ...backdrop,
         ...(variant === 1 ? [] : [chopsticks()]),
-        shadow(32, 60, 28, 2.5, '#f3e6c8'),
         ...board(),
         ...look.pieces.flatMap((kind, index) => piece(kind, SLOTS[index])),
       ],

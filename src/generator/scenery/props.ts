@@ -44,14 +44,13 @@ export function pine(
     paint(union(...tiers), leaf),
   ]
   if (snow) {
-    const tierHeight = (height - 3) * 0.42
-    const caps = tiers.map((tier, index) =>
-      intersect(
-        tier,
-        (_, y) => y < base - height + index * (height - 3) * 0.22 + tierHeight * 0.55,
+    const capBottom = base - height + (height - 3) * 0.3
+    layers.push(
+      paint(
+        intersect(tiers[0], (_, y) => y < capBottom),
+        WHITE,
       ),
     )
-    layers.push(paint(union(...caps), WHITE))
   }
   return layers
 }
@@ -202,20 +201,21 @@ export function bush(x: number, base: number, color: string): Layer {
 
 export function snowman(x: number, base: number): Layer[] {
   return [
-    paint(circle(x, base - 6, 6), WHITE),
-    paint(circle(x, base - 15, 4.5), WHITE),
+    paint(circle(x, base - 8, 8), WHITE),
+    paint(circle(x, base - 20, 6), WHITE),
     paint(
-      union(rect(x - 4, base - 20, x + 4, base - 19), rect(x - 2.5, base - 26, x + 2.5, base - 19)),
+      union(rect(x - 5, base - 27, x + 5, base - 25), rect(x - 3.5, base - 34, x + 3.5, base - 25)),
       '#3d3a4a',
     ),
     paint(
       polygon([
-        [x, base - 15.5],
-        [x + 5, base - 14.5],
-        [x, base - 13.5],
+        [x, base - 21],
+        [x + 7, base - 19.5],
+        [x, base - 18],
       ]),
       '#ff8a2a',
     ),
-    paint(rect(x - 4, base - 11.5, x + 4, base - 10), '#e53935'),
+    paint(rect(x - 5.5, base - 15.5, x + 5.5, base - 13), '#e53935'),
+    inkLayer(union(circle(x - 2.5, base - 22, 1.1), circle(x + 2, base - 22, 1.1)), INK),
   ]
 }

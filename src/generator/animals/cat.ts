@@ -1,4 +1,3 @@
-import { meadow, polkaWall, room } from '../backdrops.ts'
 import { darken, lighten } from '../color.ts'
 import { INK, type Design, type Subject, variantOf } from '../design.ts'
 import { int, type Rng } from '../random.ts'
@@ -29,12 +28,6 @@ const LOOKS: readonly CatLook[] = [
   { name: 'Abu-abu', fur: '#a3a9b8', light: '#f1f2f6', eye: INK, stripes: true },
   { name: 'Hitam', fur: '#3d3a4a', light: '#f4f0ea', eye: '#c9e65a', stripes: false },
 ]
-
-function backdrop(rng: Rng, variant: number): Layer[] {
-  if (variant === 0) return room('#ffe3c7', '#c98b5a')
-  if (variant === 1) return meadow(rng)
-  return polkaWall('#d9ecff', '#bcd8f7')
-}
 
 function body(look: CatLook): Layer[] {
   return [
@@ -116,7 +109,6 @@ export const cat: Subject = {
     return {
       title: `Kucing ${look.name}`,
       layers: [
-        ...backdrop(rng, variant),
         ...body(look),
         ...head(look),
         ...stripes(look),

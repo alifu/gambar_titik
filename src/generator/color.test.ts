@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { colorDistance, darken, hexToRgb, isHexColor, lighten, mix, rgbToHex } from './color'
+import {
+  colorDistance,
+  hexToLab,
+  darken,
+  hexToRgb,
+  isHexColor,
+  lighten,
+  mix,
+  rgbToHex,
+} from './color'
 
 describe('color', () => {
   it('mengonversi hex ↔ rgb', () => {
@@ -20,6 +29,8 @@ describe('color', () => {
     expect(isHexColor('red')).toBe(false)
     expect(isHexColor(12)).toBe(false)
     expect(colorDistance('#123456', '#123456')).toBe(0)
+    expect(colorDistance('#000000', '#ffffff')).toBeCloseTo(100, 0)
     expect(colorDistance('#000000', '#ffffff')).toBeGreaterThan(colorDistance('#000000', '#101010'))
+    expect(hexToLab('#ffffff')[0]).toBeCloseTo(100, 0)
   })
 })

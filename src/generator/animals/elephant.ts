@@ -1,4 +1,4 @@
-import { flower, meadow, polkaWall, savanna } from '../backdrops.ts'
+import { flower } from '../backdrops.ts'
 import { darken, lighten } from '../color.ts'
 import { type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
@@ -26,12 +26,6 @@ const LOOKS: readonly ElephantLook[] = [
   { name: 'Biru', skin: '#8fbce6' },
   { name: 'Merah Muda', skin: '#f4b6c8' },
 ]
-
-function backdrop(rng: Rng, variant: number): Layer[] {
-  if (variant === 0) return savanna(rng)
-  if (variant === 1) return polkaWall('#fff4d6', '#ffe08a')
-  return meadow(rng)
-}
 
 function bodyLayers(look: ElephantLook): Layer[] {
   const legs = symmetric(roundRect(19, 48, 28, 62, 2.5), AXIS)
@@ -74,12 +68,12 @@ function partyHat(): Layer[] {
 export const elephant: Subject = {
   key: 'elephant',
   count: 3,
-  create: (rng: Rng, variant: number): Design => {
+  create: (_rng: Rng, variant: number): Design => {
     const look = variantOf(LOOKS, variant)
     const extras = variant === 1 ? partyHat() : variant === 2 ? flower(19, 17, '#ff7aa2') : []
     return {
       title: `Gajah ${look.name}`,
-      layers: [...backdrop(rng, variant), ...bodyLayers(look), ...headLayers(look), ...extras],
+      layers: [...bodyLayers(look), ...headLayers(look), ...extras],
     }
   },
 }

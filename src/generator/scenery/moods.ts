@@ -2,7 +2,7 @@
 import { cloud, star } from '../backdrops.ts'
 import { WHITE } from '../design.ts'
 import { int, range, type Rng } from '../random.ts'
-import { circle, paint, rect, subtract, union, type Layer } from '../raster.ts'
+import { circle, paint, rect, softPaint, subtract, union, type Layer } from '../raster.ts'
 import { scatter } from '../scatter.ts'
 
 export const WIDTH = 96
@@ -93,20 +93,20 @@ export const MOODS: readonly Mood[] = [
   {
     key: 'night',
     word: 'Malam',
-    sky: ['#141d3b', '#22305c', '#33467a'],
+    sky: ['#2c3e7a', '#3a5090', '#4a62a6'],
     light: '#fff4c2',
     lightY: 12,
     lightRadius: 6,
-    far: '#2f3d66',
-    near: '#24304f',
-    grass: '#2f5a3e',
-    grassFar: '#3b6a4a',
-    leaf: '#24513a',
-    leafDark: '#183a2a',
-    trunk: '#4a3424',
-    water: '#2b4f7a',
-    waterLight: '#4f78a8',
-    sand: '#8b7f6a',
+    far: '#6f7fb8',
+    near: '#56679e',
+    grass: '#3f8059',
+    grassFar: '#5a9a70',
+    leaf: '#2f6e4a',
+    leafDark: '#245a3c',
+    trunk: '#7a5236',
+    water: '#3d6db0',
+    waterLight: '#86aee0',
+    sand: '#b3a27c',
     window: '#ffd166',
     snow: false,
   },
@@ -119,8 +119,8 @@ export const MOODS: readonly Mood[] = [
     lightRadius: 6,
     far: '#a9b9d0',
     near: '#8aa0bf',
-    grass: '#f4f8ff',
-    grassFar: '#e3ecf7',
+    grass: '#dde8f4',
+    grassFar: '#c9d8ea',
     leaf: '#3f7a5a',
     leafDark: '#2f5f46',
     trunk: '#6b4a32',
@@ -135,7 +135,7 @@ export const MOODS: readonly Mood[] = [
 function skyBands(mood: Mood, horizon: number): Layer[] {
   const band = horizon / mood.sky.length
   return mood.sky.map((color, index) =>
-    paint(rect(0, index === 0 ? 0 : index * band, WIDTH, HEIGHT), color),
+    softPaint(rect(0, index === 0 ? 0 : index * band, WIDTH, HEIGHT), color),
   )
 }
 
@@ -153,7 +153,7 @@ function celestial(rng: Rng, mood: Mood, x: number): Layer[] {
   const stars = scatter(rng, 7, (sx, sy) => sy < 24 && Math.abs(sx - x) > 12, 12, WIDTH, HEIGHT)
   return [
     paint(crescent, mood.light),
-    paint(union(...stars.map(([sx, sy]) => star(sx, sy, 1.6))), '#ffe680'),
+    paint(union(...stars.map(([sx, sy]) => star(sx, sy, 2.4))), '#ffe680'),
   ]
 }
 
@@ -171,11 +171,4 @@ function clouds(rng: Rng, mood: Mood, sunX: number): Layer[] {
 export function skyLayers(rng: Rng, mood: Mood, horizon: number): Layer[] {
   const x = lightX(rng, mood)
   return [...skyBands(mood, horizon), ...celestial(rng, mood, x), ...clouds(rng, mood, x)]
-}
-
-/** Butiran salju di atas segalanya (hanya suasana salju). */
-export function weather(rng: Rng, mood: Mood): Layer[] {
-  if (!mood.snow) return []
-  const flakes = scatter(rng, 8, () => true, 18, WIDTH, HEIGHT)
-  return [paint(union(...flakes.map(([x, y]) => circle(x, y, 2))), WHITE)]
 }

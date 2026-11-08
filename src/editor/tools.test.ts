@@ -1,3 +1,4 @@
+import { isOutline } from '../render/pixelColors'
 import { describe, expect, it } from 'vitest'
 import { REGION_A, REGION_B, REGION_C, REGION_E, TEST_ARTWORK as art } from '../test/editorArtwork'
 import {
@@ -43,7 +44,7 @@ describe('floodFill', () => {
     const input = emptyColors(art)
     const result = floodFill(art, input, 30, RED)
     expect(input.every((c) => c === null)).toBe(true)
-    expect(art.outline.every((isOutline, i) => !isOutline || result[i] === null)).toBe(true)
+    expect(result.every((color, i) => !isOutline(art, i) || color === null)).toBe(true)
   })
 
   it('klik di outline atau di luar kanvas = tidak berubah', () => {

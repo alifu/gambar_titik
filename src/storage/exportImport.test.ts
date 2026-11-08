@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ID } from '../i18n/id'
 import type { Progress, UserProfile } from '../types/progress'
 import {
   MAX_IMPORT_BYTES,
@@ -16,8 +17,10 @@ const prog = (
   artId: string,
   updatedAt = 10,
   colors: (string | null)[] = ['#ff0000', null],
+  mode: Progress['mode'] = 'free',
 ): Progress => ({
   artId,
+  mode,
   colors,
   percent: 50,
   completed: false,
@@ -65,7 +68,7 @@ describe('parseImportFile', () => {
   })
 
   it('rejects a wrong version', () => {
-    fails(text({ ...base(), version: 2 }))
+    fails(text({ ...base(), version: 1 }))
   })
 
   it('rejects invalid user, exportedAt and progress list', () => {
@@ -78,6 +81,7 @@ describe('parseImportFile', () => {
   it('rejects malformed progress entries', () => {
     fails(text({ ...base(), progress: [5] }))
     fails(text({ ...base(), progress: [{ ...prog('a'), completed: 'yes' }] }))
+    fails(text({ ...base(), progress: [{ ...prog('a'), mode: 'acak' }] }))
     fails(text({ ...base(), progress: [{ ...prog('a'), recentColors: ['red'] }] }))
   })
 
@@ -105,6 +109,25 @@ describe('parseImportFile', () => {
     }
   })
 
+  it('rejects version 1 files with a dedicated message', () => {
+    expect(fails(text({ ...base(), version: 1 }))).toEqual([ID.importError.oldVersion])
+  })
+
+  it('rejects unknown versions', () => {
+    expect(fails(text({ ...base(), version: 3 }))).toEqual([ID.importError.badVersion])
+  })
+
+  it('rejects invalid mode', () => {
+    const data = base()
+    data.progress[0].mode = 'abc'
+    expect(fails(text(data))).toEqual([ID.importError.badProgress(0)])
+  })
+
+  it('roundtrips progress of every mode', () => {
+    const file = buildExportFile(user, [prog('a', 1, undefined, 'number'), prog('a')], 99)
+    expect(parseImportFile(text(file), counts)).toEqual({ ok: true, file, warnings: [] })
+  })
+
   it('rejects files over 10MB', () => {
     expect(fails('x'.repeat(MAX_IMPORT_BYTES + 1))).toHaveLength(1)
   })
@@ -119,6 +142,16 @@ describe('mergeProgress', () => {
     )
     const byId = Object.fromEntries(result.map((p) => [p.artId, p.updatedAt]))
     expect(byId).toEqual({ a: 10, b: 20, c: 3 })
+  })
+
+  it('merge compares updatedAt per artId and mode', () => {
+    const result = mergeProgress(
+      [prog('a', 5, undefined, 'number'), prog('a', 20, undefined, 'free')],
+      [prog('a', 10, undefined, 'number'), prog('a', 1, undefined, 'free')],
+      'merge',
+    )
+    const byMode = Object.fromEntries(result.map((p) => [p.mode, p.updatedAt]))
+    expect(byMode).toEqual({ number: 10, free: 20 })
   })
 
   it('replace uses incoming only', () => {
@@ -139,6 +172,13 @@ describe('applyImport', () => {
     const items = await listProgress('budi')
     expect(items.map((p) => p.artId)).toEqual(['a'])
     expect(items[0]?.updatedAt).toBe(9)
+  })
+
+  it('replace removes other modes of the same art', async () => {
+    await saveProgress('budi', prog('a', 5, undefined, 'number'))
+    await applyImport('budi', [prog('a', 9)], 'replace')
+    const items = await listProgress('budi')
+    expect(items.map((p) => `${p.artId}:${p.mode}`)).toEqual(['a:free'])
   })
 
   it('merge keeps existing entries', async () => {

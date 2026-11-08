@@ -3,6 +3,7 @@ import { buildProgress, type EditorSnapshot } from '../../editor/progress'
 import { ID } from '../../i18n/id'
 import { saveProgress } from '../../storage/repository'
 import type { Artwork } from '../../types/artwork'
+import type { ColoringMode } from '../../types/progress'
 import { errorMessage } from './useEditorData'
 
 export const AUTOSAVE_DELAY_MS = 500
@@ -39,7 +40,12 @@ function reportUnmountedError(error: unknown) {
  * Auto-save ke IndexedDB dengan debounce. Snapshot awal tidak disimpan ulang.
  * Perubahan yang belum tersimpan langsung disimpan saat halaman disembunyikan/ditutup atau unmount.
  */
-export function useAutoSave(userId: string, artwork: Artwork, snapshot: EditorSnapshot) {
+export function useAutoSave(
+  userId: string,
+  artwork: Artwork,
+  snapshot: EditorSnapshot,
+  mode: ColoringMode = 'free',
+) {
   const [baseline] = useState(snapshot)
   const [state, setState] = useState<SaveState>({ saved: null, isSaving: false, error: null })
   const pendingRef = useRef<EditorSnapshot | null>(null)
@@ -48,21 +54,25 @@ export function useAutoSave(userId: string, artwork: Artwork, snapshot: EditorSn
   const isMountedRef = useRef(true)
   const persisted = state.saved ?? baseline
 
+  /** Simpan satu snapshot; true jika berhasil. Error ditampilkan lewat status. */
   const save = useCallback(
-    async (snap: EditorSnapshot) => {
+    async (snap: EditorSnapshot): Promise<boolean> => {
       const seq = ++seqRef.current
       setState((s) => ({ ...s, isSaving: true, error: null }))
       try {
-        await saveProgress(userId, buildProgress(artwork, snap, Date.now()))
+        await saveProgress(userId, buildProgress(artwork, snap, Date.now(), mode))
         if (seq === seqRef.current) setState({ saved: snap, isSaving: false, error: null })
+        return true
       } catch (error) {
         if (!isMountedRef.current) reportUnmountedError(error)
-        if (seq !== seqRef.current) return
-        const message = ID.editor.saveFailed(errorMessage(error, ''))
-        setState((s) => ({ ...s, isSaving: false, error: message }))
+        if (seq === seqRef.current) {
+          const message = ID.editor.saveFailed(errorMessage(error, ''))
+          setState((s) => ({ ...s, isSaving: false, error: message }))
+        }
+        return false
       }
     },
-    [userId, artwork],
+    [userId, artwork, mode],
   )
 
   const flush = useCallback(() => {
@@ -94,6 +104,13 @@ export function useAutoSave(userId: string, artwork: Artwork, snapshot: EditorSn
     }
   }, [flush])
 
+  /** Simpan sekarang juga (mis. sebelum ganti mode). true jika tidak ada yang gagal disimpan. */
+  const saveNow = async (): Promise<boolean> => {
+    const snap = pendingRef.current ?? (state.error === null ? null : latestRef.current)
+    pendingRef.current = null
+    return snap ? save(snap) : true
+  }
+
   const retry = () => void save(latestRef.current)
-  return { status: deriveStatus(state, snapshot, baseline), retry }
+  return { status: deriveStatus(state, snapshot, baseline), retry, saveNow }
 }

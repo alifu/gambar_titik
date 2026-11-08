@@ -1,10 +1,11 @@
 import { ID } from '../i18n/id'
 import { deleteProgress, listProgress, saveProgress } from './repository'
-import type { ExportFile, Progress, UserProfile } from '../types/progress'
+import type { ColoringMode, ExportFile, Progress, UserProfile } from '../types/progress'
 
 export const MAX_IMPORT_BYTES = 10 * 1024 * 1024
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
-const EXPORT_VERSION = 1
+const EXPORT_VERSION = 2
+const MODES: readonly string[] = ['number', 'free'] satisfies ColoringMode[]
 
 export type PixelCountLookup = (artId: string) => number | undefined
 export type MergeMode = 'merge' | 'replace'
@@ -84,9 +85,11 @@ function parseProgress(
   getPixelCount: PixelCountLookup,
 ): ProgressParse {
   if (!isRec(raw)) return { error: ID.importError.badProgress(index) }
-  const { artId, percent, completed, recentColors, updatedAt } = raw
+  const { artId, mode, percent, completed, recentColors, updatedAt } = raw
   if (
     !isStr(artId) ||
+    !isStr(mode) ||
+    !MODES.includes(mode) ||
     !isNum(percent) ||
     typeof completed !== 'boolean' ||
     !Array.isArray(recentColors) ||
@@ -102,6 +105,7 @@ function parseProgress(
   return {
     progress: {
       artId,
+      mode: mode as ColoringMode,
       colors: checked.colors,
       percent,
       completed,
@@ -124,6 +128,7 @@ export function parseImportFile(text: string, getPixelCount: PixelCountLookup): 
     return fail(ID.importError.badJson)
   }
   if (!isRec(data)) return fail(ID.importError.notObject)
+  if (data.version === 1) return fail(ID.importError.oldVersion)
   if (data.version !== EXPORT_VERSION) return fail(ID.importError.badVersion)
   const user = parseUser(data.user)
   if (!user) return fail(ID.importError.badUser)
@@ -142,18 +147,20 @@ export function parseImportFile(text: string, getPixelCount: PixelCountLookup): 
   }
 }
 
+const progressId = (p: Progress) => `${p.artId}:${p.mode}`
+
 export function mergeProgress(
   existing: readonly Progress[],
   incoming: readonly Progress[],
   mode: MergeMode,
 ): Progress[] {
   if (mode === 'replace') return [...incoming]
-  const byArt = new Map(existing.map((p) => [p.artId, p] as const))
+  const byKey = new Map(existing.map((p) => [progressId(p), p] as const))
   for (const item of incoming) {
-    const current = byArt.get(item.artId)
-    if (!current || item.updatedAt > current.updatedAt) byArt.set(item.artId, item)
+    const current = byKey.get(progressId(item))
+    if (!current || item.updatedAt > current.updatedAt) byKey.set(progressId(item), item)
   }
-  return [...byArt.values()]
+  return [...byKey.values()]
 }
 
 /** Terapkan hasil impor ke penyimpanan milik userId. Mengembalikan progres akhir. */
@@ -164,9 +171,11 @@ export async function applyImport(
 ): Promise<Progress[]> {
   const existing = await listProgress(userId)
   const result = mergeProgress(existing, incoming, mode)
-  const keep = new Set(result.map((p) => p.artId))
+  const keep = new Set(result.map(progressId))
   await Promise.all(
-    existing.filter((p) => !keep.has(p.artId)).map((p) => deleteProgress(userId, p.artId)),
+    existing
+      .filter((p) => !keep.has(progressId(p)))
+      .map((p) => deleteProgress(userId, p.artId, p.mode)),
   )
   await Promise.all(result.map((p) => saveProgress(userId, p)))
   return result

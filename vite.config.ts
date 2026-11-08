@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
@@ -7,25 +8,38 @@ const THEME_COLOR = '#7b5cff'
 const BACKGROUND_COLOR = '#fff7ec'
 const MAX_PRECACHE_FILE_BYTES = 5 * 1024 * 1024
 const COVERAGE_THRESHOLD_PERCENT = 80
+const LAN_PORT = 4173
+const LAN_CERT_FILE = '.certs/lan.pem'
+const LAN_KEY_FILE = '.certs/lan-key.pem'
+
+/** HTTPS untuk jaringan lokal jika sertifikat ada di `.certs/` (dibuat dengan mkcert). */
+function lanHttps(): { cert: Buffer; key: Buffer } | undefined {
+  if (!existsSync(LAN_CERT_FILE) || !existsSync(LAN_KEY_FILE)) return undefined
+  return { cert: readFileSync(LAN_CERT_FILE), key: readFileSync(LAN_KEY_FILE) }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
+  preview: { host: true, port: LAN_PORT, https: lanHttps() },
   plugins: [
     react(),
     VitePWA({
       registerType: 'prompt',
       injectRegister: null,
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
+        id: '/',
         name: APP_NAME,
         short_name: APP_NAME,
-        description: 'Aplikasi mewarnai pixel art secara bebas',
+        description:
+          'Mewarnai pixel art sesuai nomor atau secara bebas — pemandangan, hewan, dan makanan. Bisa dicetak dan dipakai offline.',
         lang: 'id',
         start_url: '/',
         scope: '/',
         display: 'standalone',
         theme_color: THEME_COLOR,
         background_color: BACKGROUND_COLOR,
+        categories: ['games', 'kids', 'entertainment'],
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
@@ -36,9 +50,26 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        screenshots: [
+          {
+            src: 'screenshots/galeri-wide.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Galeri 100 gambar pixel art',
+          },
+          {
+            src: 'screenshots/editor-narrow.png',
+            sizes: '390x844',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Mewarnai sesuai nomor',
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,json}'],
+        globIgnores: ['**/screenshots/**'],
         maximumFileSizeToCacheInBytes: MAX_PRECACHE_FILE_BYTES,
         navigateFallback: '/index.html',
       },

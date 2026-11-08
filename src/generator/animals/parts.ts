@@ -5,7 +5,7 @@ import {
   curve,
   ellipse,
   inkLayer,
-  paint,
+  plainPaint,
   symmetric,
   union,
   type Layer,
@@ -47,7 +47,7 @@ export function whiskers(cy: number, inner: number, outer: number): Layer {
 }
 
 export function blush(cy: number, spacing: number, color = '#ff9fb2'): Layer {
-  return paint(symmetric(ellipse(AXIS - spacing, cy, 2.6, 1.6), AXIS), color)
+  return plainPaint(symmetric(ellipse(AXIS - spacing, cy, 2.6, 1.6), AXIS), color)
 }
 
 /** Garis senyum sederhana. */

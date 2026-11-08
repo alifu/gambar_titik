@@ -1,7 +1,7 @@
 import type { Design, Subject } from './design.ts'
 import type { Rng } from './random.ts'
 import type { Layer } from './raster.ts'
-import { MOODS, weather, type Mood } from './scenery/moods.ts'
+import { MOODS, type Mood } from './scenery/moods.ts'
 import {
   beachScene,
   forestScene,
@@ -27,7 +27,7 @@ function place(
       const mood = moods[variant % moods.length]
       return {
         title: `${mood.word} di ${name}`,
-        layers: [...compose(rng, mood), ...weather(rng, mood)],
+        layers: compose(rng, mood),
       }
     },
   }

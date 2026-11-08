@@ -22,6 +22,11 @@ export function GalleryPage() {
   return (
     <section className="gallery">
       <h1>{ID.gallery.title}</h1>
+      {progress.legacyDiscarded > 0 && (
+        <p role="status" className="gallery-message">
+          {ID.gallery.legacyDiscarded}
+        </p>
+      )}
       {error ? (
         <div role="alert" className="gallery-message">
           <p>{error}</p>

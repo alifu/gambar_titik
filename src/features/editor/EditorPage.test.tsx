@@ -1,3 +1,4 @@
+import { isOutline } from '../../render/pixelColors'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -22,12 +23,12 @@ vi.mock('../../storage/repository', async (importOriginal) => ({
 const getArtworkMock = vi.mocked(getArtworkById)
 const getProgressMock = vi.mocked(getProgress)
 const saveProgressMock = vi.mocked(saveProgress)
-const FIRST_COLOR = art.suggestedPalette[0]
+const FIRST_COLOR = art.palette[1].hex
 const USER = { id: 'budi', displayName: 'Budi', createdAt: 1, lastLoginAt: 1 }
 
-function renderEditor(artId = art.id) {
+function renderEditor(artId = art.id, query = '?mode=bebas') {
   return render(
-    <MemoryRouter initialEntries={[`/warnai/${artId}`]}>
+    <MemoryRouter initialEntries={[`/warnai/${artId}${query}`]}>
       <Routes>
         <Route path="/warnai/:artId" element={<EditorPage />} />
         <Route path="/galeri" element={<h1>Halaman galeri</h1>} />
@@ -79,18 +80,25 @@ describe('EditorPage', () => {
     vi.restoreAllMocks()
   })
 
+  it('links to the print sheet', async () => {
+    await renderReady()
+    const link = screen.getByRole('link', { name: ID.print.linkLabel(art.title) })
+    expect(link).toHaveAttribute('href', `/cetak/${art.id}`)
+  })
+
   it('menampilkan status memuat lalu editor', async () => {
     renderEditor()
     expect(screen.getByRole('status')).toHaveTextContent(ID.editor.loading)
     expect(await screen.findByRole('heading', { name: art.title })).toBeInTheDocument()
     expect(percentText(0)).toBeInTheDocument()
-    expect(getProgressMock).toHaveBeenCalledWith('budi', art.id)
+    expect(getProgressMock).toHaveBeenCalledWith('budi', art.id, 'free')
   })
 
   it('memulihkan progres tersimpan', async () => {
-    const colors = art.outline.map((isOutline, i) => (!isOutline && i < 2 ? '#123456' : null))
+    const colors = art.pixels.map((_, i) => (!isOutline(art, i) && i < 2 ? '#123456' : null))
     await renderReady({
       artId: art.id,
+      mode: 'free',
       colors,
       percent: 11,
       completed: true,

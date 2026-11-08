@@ -34,3 +34,6 @@ pnpm-debug.log*
 
 # Pratinjau kurasi gambar (scripts/preview-artworks.ts)
 preview
+
+# Sertifikat HTTPS jaringan lokal (mkcert)
+.certs/

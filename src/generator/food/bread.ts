@@ -1,9 +1,7 @@
-import { polkaWall, tablecloth, woodTable } from '../backdrops.ts'
 import { darken, lighten } from '../color.ts'
 import { type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
 import { circle, ellipse, paint, roundRect, union, type Layer } from '../raster.ts'
-import { shadow } from './parts.ts'
 
 const CRUST = '#c97b38'
 const CRUMB = '#fbe7c2'
@@ -48,7 +46,7 @@ function croissant(): Layer[] {
       across,
       angle,
     )
-    return paint(shape, index % 2 === 0 ? '#e09a4a' : '#c97b38')
+    return paint(shape, index === 2 || index === 3 ? '#c2702c' : '#f5bd62')
   })
 }
 
@@ -57,19 +55,10 @@ export const bread: Subject = {
   count: 3,
   create: (_rng: Rng, variant: number): Design => {
     const names = ['Roti Tawar', 'Roti Baguette', 'Roti Croissant'] as const
-    const backdrops = [
-      woodTable('#fff4e0', '#b9875a', 46),
-      tablecloth('#fffde7', '#ffcc80', 42),
-      polkaWall('#e8eaf6', '#c5cae9'),
-    ]
     const bakes = [loaf, baguette, croissant]
     return {
       title: variantOf(names, variant),
-      layers: [
-        ...variantOf(backdrops, variant),
-        shadow(32, 56, 25, 3, '#d9a066'),
-        ...variantOf(bakes, variant)(),
-      ],
+      layers: [...variantOf(bakes, variant)()],
     }
   },
 }

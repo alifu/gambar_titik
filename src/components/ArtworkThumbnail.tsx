@@ -1,11 +1,14 @@
 import { memo, useEffect, useRef } from 'react'
 import { resolveAllPixelColors } from '../render/pixelColors'
 import type { Artwork } from '../types/artwork'
+import type { ColoringMode } from '../types/progress'
 
 interface ArtworkThumbnailProps {
   readonly artwork: Artwork
   /** Warna user; undefined = belum ada progres (hanya outline). */
   readonly colors?: readonly (string | null)[]
+  /** Mode progres: 'number' menggambar garis tepi sesuai warna user, bukan hitam terkunci. */
+  readonly mode?: ColoringMode
 }
 
 const HEX_PARTS = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i
@@ -21,17 +24,17 @@ function toPixelData(hexColors: readonly string[], data: Uint8ClampedArray): voi
   })
 }
 
-function ArtworkThumbnailBase({ artwork, colors }: ArtworkThumbnailProps) {
+function ArtworkThumbnailBase({ artwork, colors, mode = 'free' }: ArtworkThumbnailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     const context = canvasRef.current?.getContext('2d')
     if (!context) return
-    const hexColors = resolveAllPixelColors(artwork, colors, 'user')
+    const hexColors = resolveAllPixelColors(artwork, colors, 'user', mode)
     const image = context.createImageData(artwork.width, artwork.height)
     toPixelData(hexColors, image.data)
     context.putImageData(image, 0, 0)
-  }, [artwork, colors])
+  }, [artwork, colors, mode])
 
   return (
     <canvas

@@ -10,6 +10,7 @@ import {
   type MergeMode,
   type PixelCountLookup,
 } from '../../storage/exportImport'
+import { latestProgressByArt } from '../../storage/latestProgress'
 import { listProgress } from '../../storage/repository'
 import type { Progress } from '../../types/progress'
 import { useSession } from '../../user/useSession'
@@ -43,6 +44,8 @@ export function ProfilePage({ getPixelCount, lookupError }: ProfilePageProps) {
   }, [userId])
 
   if (!user) return null
+  // Dihitung per gambar memakai progres terbaru (bukan per mode).
+  const started = [...latestProgressByArt(progress).values()]
 
   async function handleBackup() {
     if (!user) return
@@ -90,10 +93,10 @@ export function ProfilePage({ getPixelCount, lookupError }: ProfilePageProps) {
       <h1>{ID.profile.title}</h1>
       <p className="profile-name">{user.displayName}</p>
       <p>
-        {ID.profile.artworksStarted}: {progress.length}
+        {ID.profile.artworksStarted}: {started.length}
       </p>
       <p>
-        {ID.profile.artworksCompleted}: {progress.filter((p) => p.completed).length}
+        {ID.profile.artworksCompleted}: {started.filter((p) => p.completed).length}
       </p>
       <button type="button" className="profile-button" onClick={handleBackup}>
         {ID.profile.backup}

@@ -1,8 +1,7 @@
-import { cloud, flower } from '../backdrops.ts'
 import { darken, lighten } from '../color.ts'
-import { INK, WHITE, type Design, type Subject, variantOf } from '../design.ts'
-import { int, type Rng } from '../random.ts'
-import { capsule, circle, ellipse, fill, inkLayer, paint, polygon, type Layer } from '../raster.ts'
+import { INK, type Design, type Subject, variantOf } from '../design.ts'
+import { type Rng } from '../random.ts'
+import { capsule, circle, ellipse, inkLayer, paint, polygon, type Layer } from '../raster.ts'
 import { thinLine } from './parts.ts'
 
 interface BirdLook {
@@ -18,15 +17,12 @@ const LOOKS: readonly BirdLook[] = [
   { name: 'Kuning', body: '#ffd23f', crest: false, sky: '#dff5d8' },
 ]
 
-function scene(rng: Rng, look: BirdLook): Layer[] {
+function branch(): Layer[] {
   return [
-    fill(look.sky),
-    paint(cloud(int(rng, 44, 52), 10, 1), WHITE),
-    paint(capsule([0, 52], [64, 47], 2.6), '#8a5a2b'),
+    paint(capsule([6, 52], [58, 47], 2.6), '#8a5a2b'),
     paint(capsule([46, 49], [56, 58], 1.6), '#8a5a2b'),
     paint(ellipse(58, 58, 4, 2, 0.6), '#5cae4a'),
     paint(ellipse(8, 47, 4.5, 2, -0.5), '#5cae4a'),
-    ...flower(54, 44, '#ff8fb1'),
   ]
 }
 
@@ -75,8 +71,8 @@ function birdLayers(look: BirdLook): Layer[] {
 export const bird: Subject = {
   key: 'bird',
   count: 3,
-  create: (rng: Rng, variant: number): Design => {
+  create: (_rng: Rng, variant: number): Design => {
     const look = variantOf(LOOKS, variant)
-    return { title: `Burung ${look.name}`, layers: [...scene(rng, look), ...birdLayers(look)] }
+    return { title: `Burung ${look.name}`, layers: [...branch(), ...birdLayers(look)] }
   },
 }

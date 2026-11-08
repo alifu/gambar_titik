@@ -1,4 +1,3 @@
-import { polkaWall } from '../backdrops.ts'
 import { darken, lighten } from '../color.ts'
 import { type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
@@ -6,9 +5,9 @@ import {
   capsule,
   circle,
   curve,
-  inkLayer,
   intersect,
   paint,
+  plainPaint,
   polygon,
   union,
   type Layer,
@@ -36,8 +35,8 @@ const CONE = polygon([
 
 function waffle(): Shape {
   const lines = [-12, -6, 0, 6, 12, 18].flatMap((offset) => [
-    capsule([20 + offset, 40], [32 + offset, 62], 0.55),
-    capsule([44 - offset, 40], [32 - offset, 62], 0.55),
+    capsule([20 + offset, 40], [32 + offset, 62], 0.9),
+    capsule([44 - offset, 40], [32 - offset, 62], 0.9),
   ])
   return intersect(CONE, union(...lines))
 }
@@ -79,9 +78,8 @@ export const iceCream: Subject = {
     return {
       title: `Es Krim ${look.name}`,
       layers: [
-        ...polkaWall(look.wall, darken(look.wall, 0.07)),
         paint(CONE, '#e8b067'),
-        inkLayer(waffle(), darken('#e8b067', 0.3)),
+        plainPaint(waffle(), darken('#e8b067', 0.25)),
         ...scoopLayers(rng, look),
       ],
     }

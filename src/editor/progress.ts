@@ -1,6 +1,6 @@
 import { computePercent } from '../render/pixelColors'
 import type { Artwork } from '../types/artwork'
-import type { Progress } from '../types/progress'
+import type { ColoringMode, Progress } from '../types/progress'
 import { isStoredHex } from './color'
 import { emptyColors, type PixelColors } from './tools'
 
@@ -24,11 +24,17 @@ export function snapshotFromProgress(
   }
 }
 
-export function buildProgress(artwork: Artwork, snapshot: EditorSnapshot, now: number): Progress {
+export function buildProgress(
+  artwork: Artwork,
+  snapshot: EditorSnapshot,
+  now: number,
+  mode: ColoringMode = 'free',
+): Progress {
   return {
     artId: artwork.id,
+    mode,
     colors: snapshot.colors,
-    percent: computePercent(artwork, snapshot.colors),
+    percent: computePercent(artwork, snapshot.colors, mode),
     completed: snapshot.completed,
     recentColors: snapshot.recentColors,
     updatedAt: now,

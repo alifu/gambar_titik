@@ -1,4 +1,3 @@
-import { meadow, nightSky, snowField } from '../backdrops.ts'
 import { INK, WHITE, type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
 import {
@@ -26,12 +25,6 @@ const LOOKS: readonly FoxLook[] = [
   { name: 'Kutub', fur: '#eef2f7', light: '#c9d6e6', dark: '#8c9bb0' },
   { name: 'Merah', fur: '#d9541e', light: '#fff3e6', dark: '#3d2a22' },
 ]
-
-function backdrop(rng: Rng, variant: number): Layer[] {
-  if (variant === 0) return meadow(rng, '#ffe9c7', '#b5c95a')
-  if (variant === 1) return snowField(rng)
-  return nightSky(rng, '#24305e')
-}
 
 function tailAndBody(look: FoxLook): Layer[] {
   return [
@@ -88,11 +81,11 @@ function headLayers(look: FoxLook): Layer[] {
 export const fox: Subject = {
   key: 'fox',
   count: 3,
-  create: (rng: Rng, variant: number): Design => {
+  create: (_rng: Rng, variant: number): Design => {
     const look = variantOf(LOOKS, variant)
     return {
       title: `Rubah ${look.name}`,
-      layers: [...backdrop(rng, variant), ...tailAndBody(look), ...headLayers(look)],
+      layers: [...tailAndBody(look), ...headLayers(look)],
     }
   },
 }

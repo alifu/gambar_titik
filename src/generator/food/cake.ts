@@ -1,5 +1,4 @@
-import { polkaWall, tablecloth } from '../backdrops.ts'
-import { darken, lighten } from '../color.ts'
+import { lighten } from '../color.ts'
 import { WHITE, type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
 import {
@@ -14,7 +13,6 @@ import {
   type Layer,
   type Shape,
 } from '../raster.ts'
-import { sprinkles } from './parts.ts'
 
 interface CakeLook {
   readonly name: string
@@ -60,7 +58,7 @@ function toppers(look: CakeLook): Layer[] {
   ]
 }
 
-function cakeLayers(rng: Rng, look: CakeLook): Layer[] {
+function cakeLayers(look: CakeLook): Layer[] {
   const cream = intersect(BODY, rect(0, 40, 64, 43))
   const layers: Layer[] = [
     paint(ellipse(32, 54, 26, 6), WHITE),
@@ -69,23 +67,14 @@ function cakeLayers(rng: Rng, look: CakeLook): Layer[] {
     paint(cream, lighten(look.frosting, look.frosting === WHITE ? 0 : 0.4)),
     paint(frostingShape(), look.frosting),
   ]
-  const extras =
-    look.topper === 'candles' ? sprinkles(rng, 6, intersect(BODY, rect(0, 44, 64, 52))) : []
-  return [...layers, ...extras, ...toppers(look)]
+  return [...layers, ...toppers(look)]
 }
 
 export const cake: Subject = {
   key: 'cake',
   count: 3,
-  create: (rng: Rng, variant: number): Design => {
+  create: (_rng: Rng, variant: number): Design => {
     const look = variantOf(LOOKS, variant)
-    const backdrop =
-      variant === 1
-        ? tablecloth('#fff0f5', '#ffc1d6', 44)
-        : polkaWall(
-            variant === 0 ? '#ffe9c9' : '#e3f0ff',
-            darken(variant === 0 ? '#ffe9c9' : '#e3f0ff', 0.08),
-          )
-    return { title: `Kue ${look.name}`, layers: [...backdrop, ...cakeLayers(rng, look)] }
+    return { title: `Kue ${look.name}`, layers: cakeLayers(look) }
   },
 }

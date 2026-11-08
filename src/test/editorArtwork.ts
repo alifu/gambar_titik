@@ -24,11 +24,12 @@ export const TEST_ARTWORK: Artwork = {
   category: 'animal',
   width: 6,
   height: 6,
-  outline: ROWS.join('')
+  palette: [
+    { code: '0', name: 'Hitam', hex: '#000000' },
+    { code: '1', name: 'Oranye', hex: '#ffaa00' },
+    { code: '2', name: 'Biru', hex: '#3366ff' },
+  ],
+  pixels: ROWS.join('')
     .split('')
-    .map((c) => c === '#'),
-  reference: ROWS.join('')
-    .split('')
-    .map((c) => (c === '#' ? '#000000' : '#ffaa00')),
-  suggestedPalette: ['#ffaa00', '#3366ff'],
+    .map((c) => (c === '#' ? 0 : 1)),
 }

@@ -5,6 +5,7 @@
     "dev": "vite",
     "build": "npm run generate && tsc -b && vite build",
     "preview": "vite preview",
+    "lan": "npm run build && vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",

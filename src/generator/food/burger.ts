@@ -1,18 +1,17 @@
-import { polkaWall, tablecloth, woodTable } from '../backdrops.ts'
-import { WHITE, type Design, type Subject, variantOf } from '../design.ts'
+import { type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
 import {
   circle,
   ellipse,
   intersect,
   paint,
+  plainPaint,
   polygon,
   rect,
   roundRect,
   union,
   type Layer,
 } from '../raster.ts'
-import { shadow } from './parts.ts'
 
 type Item = 'patty' | 'cheese' | 'tomato' | 'lettuce' | 'onion'
 
@@ -77,7 +76,7 @@ function seeds(top: number): Layer {
     [28, top + 10],
     [37, top + 10],
   ] as const
-  return paint(union(...points.map(([x, y]) => ellipse(x, y, 1.6, 1, 0.4))), '#fff4d6')
+  return plainPaint(union(...points.map(([x, y]) => ellipse(x, y, 2.2, 1.4, 0.4))), '#fff4d6')
 }
 
 function burgerLayers(look: BurgerLook): Layer[] {
@@ -89,15 +88,9 @@ function burgerLayers(look: BurgerLook): Layer[] {
     paint(bottomBun, '#e9a956'),
     ...filling.layers,
     paint(dome, '#f0a952'),
-    paint(ellipse(24, domeTop + 6, 4, 2, -0.4), '#f7c98a'),
+    plainPaint(ellipse(24, domeTop + 6, 4, 2, -0.4), '#f7c98a'),
     seeds(domeTop),
   ]
-}
-
-function backdrop(variant: number): Layer[] {
-  if (variant === 0) return woodTable('#fff1c1')
-  if (variant === 1) return tablecloth('#ffe0e0', '#7fb3ff')
-  return polkaWall('#e0f7fa', WHITE)
 }
 
 export const burger: Subject = {
@@ -107,7 +100,7 @@ export const burger: Subject = {
     const look = variantOf(LOOKS, variant)
     return {
       title: `Burger ${look.name}`,
-      layers: [...backdrop(variant), shadow(32, 57, 24, 3.5, '#d9a066'), ...burgerLayers(look)],
+      layers: [...burgerLayers(look)],
     }
   },
 }

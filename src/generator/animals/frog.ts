@@ -1,4 +1,3 @@
-import { pond } from '../backdrops.ts'
 import { darken, lighten } from '../color.ts'
 import { INK, WHITE, type Design, type Subject, variantOf } from '../design.ts'
 import { type Rng } from '../random.ts'
@@ -73,11 +72,11 @@ function crown(): Layer {
 export const frog: Subject = {
   key: 'frog',
   count: 3,
-  create: (rng: Rng, variant: number): Design => {
+  create: (_rng: Rng, variant: number): Design => {
     const look = variantOf(LOOKS, variant)
     return {
       title: `Katak ${look.name}`,
-      layers: [...pond(rng), ...lilyPad(), ...frogLayers(look)],
+      layers: [...lilyPad(), ...frogLayers(look)],
     }
   },
 }

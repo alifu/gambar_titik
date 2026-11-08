@@ -19,7 +19,8 @@ import type { Artwork } from '../../types/artwork'
 const DEFAULT_COLOR = '#000000'
 
 function initialColor(artwork: Artwork, initial: EditorSnapshot): string {
-  const candidate = initial.recentColors[0] ?? artwork.suggestedPalette[0] ?? DEFAULT_COLOR
+  const candidate =
+    initial.recentColors[0] ?? (artwork.palette[1] ?? artwork.palette[0])?.hex ?? DEFAULT_COLOR
   return normalizeHex(candidate) ?? DEFAULT_COLOR
 }
 

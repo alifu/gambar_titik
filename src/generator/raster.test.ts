@@ -4,20 +4,25 @@ import {
   capsule,
   circle,
   curve,
+  detailLine,
   ellipse,
   fill,
+  IDENTITY_VIEW,
   inkLayer,
   intersect,
   mirrorX,
   paint,
+  plainPaint,
   polar,
   polygon,
   rect,
   render,
   roundRect,
   sector,
+  softPaint,
   subtract,
   symmetric,
+  topLayer,
   translate,
   union,
 } from './raster'
@@ -94,5 +99,45 @@ describe('render', () => {
     expect(raster.depth[1]).toBe(2)
     expect(raster.colors[15]).toBe('#ffffff')
     expect(layers).toHaveLength(3)
+  })
+
+  it('kotak tanpa lapisan menjadi latar (null)', () => {
+    const raster = render(2, 1, [paint(rect(0, 0, 1, 1), '#ff0000')])
+    expect(raster.colors).toEqual(['#ff0000', null])
+    expect(raster.depth).toEqual([1, 0])
+  })
+
+  it('supersampling memakai lapisan terluas, tinta tipis tetap menang', () => {
+    const layers = [
+      fill('#ffffff'),
+      paint(rect(0, 0, 0.3, 1), '#ff0000'),
+      inkLayer(rect(1, 0, 1.3, 1), '#000000'),
+    ]
+    const raster = render(2, 1, layers, IDENTITY_VIEW, 4)
+    expect(raster.colors).toEqual(['#ffffff', '#000000'])
+  })
+
+  it('view memetakan kotak ke koordinat desain', () => {
+    const view = { x0: 10, y0: 0, scaleX: 2, scaleY: 2 }
+    const raster = render(2, 1, [paint(rect(12, 0, 14, 2), '#ff0000')], view)
+    expect(raster.colors).toEqual([null, '#ff0000'])
+  })
+
+  it('menandai lapisan lembut dan polos', () => {
+    const raster = render(3, 1, [
+      softPaint(rect(0, 0, 1, 1), '#111111'),
+      plainPaint(rect(1, 0, 2, 1), '#222222'),
+      detailLine(rect(2, 0, 3, 1), '#333333'),
+    ])
+    expect(raster.soft).toEqual([true, false, false])
+    expect(raster.plain).toEqual([false, true, true])
+    expect(raster.ink).toEqual([false, false, true])
+  })
+
+  it('topLayer mengembalikan lapisan paling depan (1-based)', () => {
+    const layers = [fill('#ffffff'), paint(rect(0, 0, 1, 1), '#ff0000')]
+    expect(topLayer(layers, 0.5, 0.5)).toBe(2)
+    expect(topLayer(layers, 5, 5)).toBe(1)
+    expect(topLayer([], 0, 0)).toBe(0)
   })
 })

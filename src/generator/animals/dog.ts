@@ -1,4 +1,3 @@
-import { meadow, polkaWall, room } from '../backdrops.ts'
 import { lighten } from '../color.ts'
 import { INK, WHITE, type Design, type Subject, variantOf } from '../design.ts'
 import { chance, type Rng } from '../random.ts'
@@ -29,12 +28,6 @@ const LOOKS: readonly DogLook[] = [
   { name: 'Putih Belang', fur: '#fbf7f0', ear: '#b07a4a', light: '#fbf7f0', patch: true },
   { name: 'Krem', fur: '#f1c27d', ear: '#d48f45', light: '#fff3dc', patch: false },
 ]
-
-function backdrop(rng: Rng, variant: number): Layer[] {
-  if (variant === 0) return meadow(rng)
-  if (variant === 1) return room('#d8f0e4', '#b7825a')
-  return polkaWall('#ffe6ee', '#ffc9d9')
-}
 
 function body(look: DogLook): Layer[] {
   return [
@@ -92,7 +85,6 @@ export const dog: Subject = {
     return {
       title: `Anjing ${look.name}`,
       layers: [
-        ...backdrop(rng, variant),
         ...(variant === 1 || chance(rng, 0.5) ? [bone()] : []),
         ...body(look),
         bandana(variant),

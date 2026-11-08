@@ -20,6 +20,10 @@ export const MAX_ZOOM = 64
 export const ZOOM_STEP = 1.25
 /** Garis grid ditampilkan mulai zoom ini. */
 export const GRID_MIN_ZOOM = 10
+/** Kode warna di kotak (mode nomor) ditampilkan mulai zoom ini. */
+export const LABEL_MIN_ZOOM = 8
+/** Di bawah zoom ini kode masih kecil: tampilkan petunjuk untuk memperbesar. */
+export const LABEL_READABLE_ZOOM = 10
 /** Ruang kosong di sekitar gambar saat "ukuran awal" (px). */
 const FIT_MARGIN = 8
 
@@ -36,6 +40,22 @@ export function fitViewport(art: Size, container: Size): Viewport {
     zoom,
     panX: (container.width - art.width * zoom) / 2,
     panY: (container.height - art.height * zoom) / 2,
+  }
+}
+
+/**
+ * Tampilan awal mode nomor: sama dengan `fitViewport` bila kotak sudah cukup besar untuk kode
+ * terbaca; jika tidak, mulai di zoom `LABEL_READABLE_ZOOM`, rata tengah horizontal dan rata atas.
+ */
+export function readableStartViewport(art: Size, container: Size): Viewport {
+  const fit = fitViewport(art, container)
+  if (fit.zoom >= LABEL_READABLE_ZOOM) return fit
+  const zoom = LABEL_READABLE_ZOOM
+  const artH = art.height * zoom
+  return {
+    zoom,
+    panX: (container.width - art.width * zoom) / 2,
+    panY: artH <= container.height ? (container.height - artH) / 2 : FIT_MARGIN,
   }
 }
 
